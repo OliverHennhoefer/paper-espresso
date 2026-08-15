@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Espresso"
+  short_description: "Distill research papers into compact PDFs"
+  default_prompt: "Use $paper-espresso to turn this paper title into a one-page mathematical digest."

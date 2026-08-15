@@ -1,0 +1,22 @@
+{
+  "name": "paper-espresso",
+  "version": "0.2.0",
+  "description": "Distill an arXiv paper into a dense, mathematical LaTeX digest with source and verified PDF output.",
+  "author": {
+    "name": "Paper Espresso contributors"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Paper Espresso",
+    "shortDescription": "Compress papers into rigorous technical digests.",
+    "longDescription": "Resolve a paper from its title or arXiv identifier, acquire source safely with PDF fallback, extract a working corpus, and produce a page-budgeted LaTeX source plus density-checked PDF.",
+    "developerName": "Paper Espresso contributors",
+    "category": "Productivity",
+    "capabilities": ["Analysis", "Write"],
+    "defaultPrompt": [
+      "Distill this paper into a one-page technical digest.",
+      "Create a two-page mathematical digest of this arXiv paper.",
+      "Explain this paper through its core annotated equation."
+    ]
+  }
+}

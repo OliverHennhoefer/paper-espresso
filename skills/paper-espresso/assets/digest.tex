@@ -1,0 +1,79 @@
+\documentclass[10pt,twocolumn]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.55in,columnsep=0.20in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{booktabs,tabularx}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{annotate-equations}
+\newcommand{\peMark}[3][NavyBlue]{\eqnmarkbox[#1]{#2}{#3}}
+\newcommand{\peAnnotate}[4][]{\annotate[#1]{#2}{#3}{#4}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1.5pt}
+\setlength{\abovedisplayskip}{4pt plus 1pt minus 1pt}
+\setlength{\belowdisplayskip}{4pt plus 1pt minus 1pt}
+\setlength{\abovedisplayshortskip}{2pt plus 1pt}
+\setlength{\belowdisplayshortskip}{3pt plus 1pt minus 1pt}
+\setlength{\jot}{2pt}
+\setlist{nosep,leftmargin=*,topsep=1pt,partopsep=0pt}
+\setcounter{secnumdepth}{0}
+\renewcommand{\section}[1]{\vspace{2pt}\textbf{#1.}\hspace{0.30em}}
+\newcommand{\paperclaim}[1]{\textbf{Paper claim:} #1}
+\newcommand{\addedcontext}[1]{\textit{Intuition:} #1}
+\pagestyle{empty}
+\frenchspacing
+\raggedbottom
+\emergencystretch=1em
+
+\begin{document}
+
+{\bfseries PAPER_ESPRESSO_TITLE}\hfill{\footnotesize PAPER_ESPRESSO_YEAR}\par
+{\footnotesize PAPER_ESPRESSO_AUTHORS}\par
+\vspace{1pt}\hrule\vspace{2pt}
+
+\section{Problem}
+PAPER_ESPRESSO_PROBLEM
+
+\section{Core contribution}
+\paperclaim{PAPER_ESPRESSO_CONTRIBUTION}
+
+\section{Mechanism}
+PAPER_ESPRESSO_METHOD
+
+\textbf{Assumptions.} PAPER_ESPRESSO_ASSUMPTIONS
+
+\vspace{1.1em}
+\begin{equation*}
+  \peMark[NavyBlue]{objective}{PAPER_ESPRESSO_OBJECTIVE}
+  =
+  \peMark[OliveGreen]{signal}{PAPER_ESPRESSO_SIGNAL}
+  +
+  \peMark[WildStrawberry]{constraint}{PAPER_ESPRESSO_CONSTRAINT}.
+\end{equation*}
+\peAnnotate[yshift=1.2em]{above}{objective}{objective}
+\peAnnotate[yshift=-1.1em]{below}{signal}{driving term}
+\peAnnotate[yshift=1.2em]{above}{constraint}{regularizer / constraint}
+\par\vspace{2.4em}
+
+\textbf{Symbols.} PAPER_ESPRESSO_SYMBOLS
+
+\addedcontext{PAPER_ESPRESSO_INTUITION}
+
+\section{Evidence}
+PAPER_ESPRESSO_RESULTS
+
+\section{Limits}
+PAPER_ESPRESSO_LIMITATIONS
+
+\section{Related concepts}
+PAPER_ESPRESSO_RELATED
+
+{\footnotesize\textbf{Source:} \href{PAPER_ESPRESSO_URL}{PAPER_ESPRESSO_CITATION}.}
+
+\end{document}
