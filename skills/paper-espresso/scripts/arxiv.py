@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve and safely acquire arXiv papers using only the Python standard library."""
+"""Resolve and safely acquire an arXiv paper or import a local PDF."""
 
 from __future__ import annotations
 
@@ -22,11 +22,12 @@ from typing import Any
 
 API_URL = "https://export.arxiv.org/api/query"
 ARXIV_URL = "https://arxiv.org"
-USER_AGENT = "paper-espresso/0.1 (research-paper retrieval)"
+USER_AGENT = "paper-espresso/0.4.0 (research-paper retrieval)"
 MAX_DOWNLOAD = 100 * 1024 * 1024
 MAX_EXTRACTED = 250 * 1024 * 1024
 MAX_MEMBERS = 5000
 MATCH_THRESHOLD = 0.86
+MATCH_MARGIN = 0.05
 ATOM = "{http://www.w3.org/2005/Atom}"
 ARXIV = "{http://arxiv.org/schemas/atom}"
 ID_RE = re.compile(r"(?:arxiv:)?((?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})(?:v\d+)?)", re.I)
@@ -127,6 +128,9 @@ def _entry_to_paper(entry: ET.Element, requested_title: str | None) -> Paper:
 
 def resolve(query: str, *, max_results: int = 8) -> dict[str, Any]:
     arxiv_id = parse_arxiv_id(query)
+    parsed_url = urllib.parse.urlparse(query.strip())
+    if parsed_url.scheme.lower() in {"http", "https"} and arxiv_id is None:
+        raise ArxivError("remote URLs must be arXiv abstract or PDF URLs; use a local path for other PDFs")
     params: dict[str, str | int]
     requested_title: str | None
     if arxiv_id:
@@ -145,9 +149,21 @@ def resolve(query: str, *, max_results: int = 8) -> dict[str, Any]:
         raise ArxivError(f"no arXiv paper found for: {query}")
     papers.sort(key=lambda paper: paper.match_score, reverse=True)
     best = papers[0]
+    needs_confirmation = False
+    if requested_title is not None:
+        normalized = normalize_title(requested_title)
+        exact = [paper for paper in papers if normalize_title(paper.title) == normalized]
+        if len(exact) == 1:
+            best = exact[0]
+        else:
+            second_score = papers[1].match_score if len(papers) > 1 else 0.0
+            needs_confirmation = (
+                best.match_score < MATCH_THRESHOLD
+                or best.match_score - second_score < MATCH_MARGIN
+            )
     return {
         "paper": asdict(best),
-        "needs_confirmation": requested_title is not None and best.match_score < MATCH_THRESHOLD,
+        "needs_confirmation": needs_confirmation,
         "candidates": [asdict(paper) for paper in papers[:5]],
     }
 
@@ -172,9 +188,12 @@ def safe_extract_source(data: bytes, destination: Path) -> list[str]:
         raw = data
         if data.startswith(b"\x1f\x8b"):
             try:
-                raw = gzip.decompress(data)
+                with gzip.GzipFile(fileobj=io.BytesIO(data)) as compressed:
+                    raw = compressed.read(MAX_EXTRACTED + 1)
             except OSError as exc:
                 raise ArxivError(f"invalid gzip source: {exc}") from exc
+            if len(raw) > MAX_EXTRACTED:
+                raise ArxivError("raw gzip source exceeds extracted-size limit")
         if b"\\documentclass" not in raw[:2_000_000] and b"\\begin{" not in raw[:2_000_000]:
             raise ArxivError("source response is neither a safe archive nor recognizable TeX")
         (destination / "main.tex").write_bytes(raw)
@@ -223,7 +242,54 @@ def _prepare_workspace(work_dir: Path) -> Path:
     return workspace
 
 
+def _import_local_pdf(pdf: Path, workspace: Path) -> dict[str, Any]:
+    path = pdf.expanduser().resolve()
+    if not path.is_file():
+        raise ArxivError(f"local PDF not found: {path}")
+    if path.stat().st_size > MAX_DOWNLOAD:
+        raise ArxivError(f"local PDF exceeds {MAX_DOWNLOAD} bytes: {path}")
+    with path.open("rb") as source:
+        if source.read(5) != b"%PDF-":
+            raise ArxivError(f"local input is not a PDF: {path}")
+    input_dir = workspace / "input"
+    input_dir.mkdir(parents=True)
+    destination = input_dir / "paper.pdf"
+    shutil.copyfile(path, destination)
+    title = path.stem.replace("-", " ").replace("_", " ").strip() or path.name
+    manifest = {
+        "format": 1,
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "paper": {
+            "arxiv_id": None,
+            "title": title,
+            "authors": [],
+            "abstract": None,
+            "published": None,
+            "updated": None,
+            "primary_category": None,
+            "license": None,
+            "abs_url": None,
+            "pdf_url": None,
+            "source_url": None,
+            "match_score": 1.0,
+        },
+        "acquisition": {"kind": "pdf", "path": "input/paper.pdf", "files": ["paper.pdf"]},
+        "fallback_errors": [],
+        "local_source_name": path.name,
+    }
+    (workspace / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return manifest
+
+
 def fetch(query: str, work_dir: Path, *, accept_best_match: bool = False, pdf_only: bool = False) -> dict[str, Any]:
+    workspace = _prepare_workspace(work_dir)
+    local_path = Path(query).expanduser()
+    if local_path.is_file():
+        return _import_local_pdf(local_path, workspace)
+    parsed = urllib.parse.urlparse(query.strip())
+    if local_path.suffix.lower() == ".pdf" and parsed.scheme.lower() not in {"http", "https"}:
+        raise ArxivError(f"local PDF not found: {local_path.resolve()}")
+
     resolution = resolve(query)
     if resolution["needs_confirmation"] and not accept_best_match:
         candidate_lines = [
@@ -232,7 +298,6 @@ def fetch(query: str, work_dir: Path, *, accept_best_match: bool = False, pdf_on
         ]
         raise ArxivError("ambiguous title match; verify one of:\n" + "\n".join(candidate_lines))
     paper = resolution["paper"]
-    workspace = _prepare_workspace(work_dir)
     input_dir = workspace / "input"
     errors: list[str] = []
     acquisition: dict[str, Any] | None = None
@@ -273,9 +338,9 @@ def fetch(query: str, work_dir: Path, *, accept_best_match: bool = False, pdf_on
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    resolve_parser = subparsers.add_parser("resolve", help="resolve a title, ID, or URL")
+    resolve_parser = subparsers.add_parser("resolve", help="resolve a title, arXiv ID, or arXiv URL")
     resolve_parser.add_argument("query")
-    fetch_parser = subparsers.add_parser("fetch", help="resolve and acquire a paper")
+    fetch_parser = subparsers.add_parser("fetch", help="resolve an arXiv paper or import a local PDF")
     fetch_parser.add_argument("query")
     fetch_parser.add_argument("--work-dir", required=True, type=Path)
     fetch_parser.add_argument("--accept-best-match", action="store_true")

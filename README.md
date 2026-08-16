@@ -1,8 +1,8 @@
 # Paper Espresso
 
-**A paper, reduced to what a future reader must know.**
+**A careful first reading, compressed to what must survive.**
 
-Paper Espresso is a Codex-first agent skill that reads a research paper completely and creates a compact technical reference for rapid consultation and reconstruction of its central reasoning. It preserves the relationships, mathematics, assumptions, evidence, and limitations needed to recover the paper's essential mental model—without reproducing its narrative structure. The default output is one dense, readable LaTeX page (`.tex` + verified `.pdf`).
+Paper Espresso is a Codex-first agent skill that reads a research paper completely and creates the smallest faithful learning artifact that can transfer its essential mental model. It preserves the mathematics, conditions, uncertainty, and difficulty that genuinely matter without reproducing the paper's narrative structure. The default output uses at most one dense, readable LaTeX page (`.tex` plus a compiled, layout-checked `.pdf`).
 
 [Documentation](https://oliverhennhoefer.github.io/paper-espresso/) · [How it works](https://oliverhennhoefer.github.io/paper-espresso/how-it-works/) · [Get started](https://oliverhennhoefer.github.io/paper-espresso/get-started/)
 
@@ -15,10 +15,10 @@ Tools such as NotebookLM are excellent for approachable exploration—especially
 | Experience | Optimizes for | Typical result |
 | --- | --- | --- |
 | Original paper | Completeness and the authors' full argument | The technical source of truth |
-| **Paper Espresso** | Irreducible technical understanding | A dense one-page source and PDF |
+| **Paper Espresso** | Essential understanding per minute | A compact structured learning artifact |
 | NotebookLM-style overview | Approachable exploration and listening | A conversational introduction |
 
-Paper Espresso is not a replacement for reading the paper. It is a compact technical map for deciding what deserves deeper attention, preparing to read, and remembering the work afterward.
+Paper Espresso aims to surrogate a careful first reading when reading every potentially relevant paper in full is impractical. Seminal, consequential, or directly reused work should still be checked against the original.
 
 ## What survives
 
@@ -32,13 +32,13 @@ Paper Espresso is not a replacement for reading the paper. It is a compact techn
 
 Everything else must earn its place. The skill explicitly rejects section-by-section paraphrase, generic background, decorative equations, repeated conclusions, and layout tricks that conceal weak prioritization.
 
-The digest is primarily continuous technical prose, not a miniature paper with predetermined sections. It prefers plain language, direct sentences, and active voice where they preserve scientific meaning. It retains and defines original field terminology when that terminology names a real distinction or helps the reader navigate the paper and its literature. Accessibility reduces avoidable decoding work; it does not trivialize the content.
+The digest uses compact visible semantic guideposts—normally three to five inline heads—to expose the paper's conceptual structure and lower search effort. Labels and order adapt to the paper instead of mirroring its table of contents. Plain language, direct sentences, and active voice reduce avoidable decoding work when they preserve scientific meaning. Original terminology remains when it names a real distinction or helps readers navigate the field, and is defined near first use.
 
-Short bold inline guideposts may clarify a real conceptual turn. Mathematics stays inline when legible; displays are compact and unnumbered unless their structure requires otherwise. A few equation operations may receive light pastel backgrounds that are picked up directly by named phrases in the adjacent prose—no arrows, legends, or color-only references. Narrow visuals or mathematical objects may sit inside the prose flow so text uses the adjacent space. Captions are exceptional, not defaults.
+Mathematics stays inline when legible; displays are compact and unnumbered unless their structure requires otherwise. A few equation operations may receive light pastel backgrounds that are picked up directly by named phrases in adjacent prose—no arrows, legends, or color-only references. Narrow visuals or mathematical objects may sit inside the prose flow. Captions are exceptional, not defaults.
 
 ## Start a pass
 
-A paper title, arXiv ID, or URL is the only input required to start. Choose one of these alternative launch lanes; do not run both.
+A paper title, arXiv ID, arXiv URL, or local PDF is the only input required to start. Choose one of these alternative launch lanes; do not run both.
 
 Installed plugin (normal use):
 
@@ -52,7 +52,7 @@ Repository checkout (development before installation):
 Read and follow skills/paper-espresso/SKILL.md for https://arxiv.org/abs/1706.03762.
 ```
 
-Replace the example URL with any paper title, arXiv ID, or URL. With no other instructions, the skill uses its defaults: one explicit US Letter page, inferred emphasis, a technically literate reader outside the paper's immediate subfield, and editable `.tex` plus verified `.pdf` output. Append instructions only to override those defaults, for example: `— two A4 pages; emphasize the proof strategy.` If a title matches multiple papers, the skill asks for clarification.
+Replace the example with a paper title, arXiv ID, arXiv URL, or local PDF path. With no other instructions, the skill uses at most one US Letter page, infers emphasis, writes for a technically literate reader outside the immediate subfield, and delivers editable `.tex` plus a compiled, layout-checked `.pdf`. Append instructions only to override those defaults, for example: `— two A4 pages; emphasize the proof strategy.` If a title matches multiple papers, the skill asks for clarification.
 
 The project is distributed as a skills-only plugin and can be installed from a local marketplace source while it is under development; see the [official Codex plugin guidance](https://learn.chatgpt.com/docs/build-plugins).
 
@@ -63,7 +63,7 @@ The project is distributed as a skills-only plugin and can be installed from a l
 - Poppler: `pdftotext`, `pdfinfo`, and `pdftoppm`
 - A LaTeX engine: Tectonic, `pdflatex`, `lualatex`, or `xelatex`
 
-The runtime uses Python's standard library. It prefers original arXiv TeX source and falls back to PDF. Downloaded TeX is treated as untrusted data and is never compiled; only the newly authored digest is compiled, with shell escape disabled.
+The runtime uses Python's standard library. It prefers original arXiv TeX source, falls back to arXiv PDF, and accepts a local PDF. Retrieved material is untrusted evidence and is never compiled. The authored digest is preflighted, staged with explicit assets only, and compiled in isolation with shell escape disabled.
 
 ## Documentation
 
@@ -91,7 +91,8 @@ uv.lock                             reproducible dependency lockfile
 skills/paper-espresso/SKILL.md      canonical editorial workflow
 skills/paper-espresso/scripts/      retrieval, extraction, compile, QA, cleanup
 skills/paper-espresso/assets/       compact LaTeX template with semantic markers
-skills/paper-espresso/references/   content-selection and layout contracts
+skills/paper-espresso/references/   conditional layout guidance
+evals/                              three-case immediate-comprehension benchmark
 docs/                               Zensical documentation source
 zensical.toml                       documentation configuration
 ```

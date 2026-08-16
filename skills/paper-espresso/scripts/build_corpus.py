@@ -109,7 +109,15 @@ def extract_pdf(pdf_path: Path) -> str:
     )
     if result.returncode != 0:
         raise CorpusError(f"pdftotext failed: {result.stderr.strip()}")
-    return result.stdout
+    pages = result.stdout.split("\f")
+    if pages and not pages[-1].strip():
+        pages.pop()
+    if not pages:
+        raise CorpusError("pdftotext produced no page content")
+    return "\n\n".join(
+        f"===== PDF PAGE {number} =====\n{page.rstrip()}"
+        for number, page in enumerate(pages, start=1)
+    ) + "\n"
 
 
 def build(work_dir: Path) -> dict[str, Any]:
@@ -127,20 +135,12 @@ def build(work_dir: Path) -> dict[str, Any]:
         tex_files = sorted(path for path in source_root.rglob("*.tex") if path.is_file())
         main = choose_main(tex_files)
         corpus, included = flatten_tex(source_root, main)
-        unreferenced: list[str] = []
-        for extra in tex_files:
-            relative = extra.relative_to(source_root).as_posix()
-            if relative not in included:
-                unreferenced.append(relative)
-                corpus += (
-                    f"\n% ===== UNREFERENCED TEX FILE: {relative} =====\n"
-                    f"{_read_text(extra)}\n"
-                    f"% ===== END UNREFERENCED TEX FILE: {relative} =====\n"
-                )
+        unreferenced = [
+            path.relative_to(source_root).as_posix()
+            for path in tex_files
+            if path.relative_to(source_root).as_posix() not in included
+        ]
         bib_files = sorted(path for path in source_root.rglob("*.bib") if path.is_file())
-        for bib in bib_files:
-            relative = bib.relative_to(source_root).as_posix()
-            corpus += f"\n% ===== BIBLIOGRAPHY: {relative} =====\n{_read_text(bib)}\n"
         figure_files = sorted(
             path
             for path in source_root.rglob("*")

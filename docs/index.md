@@ -1,22 +1,22 @@
 # Paper Espresso
 
-## A paper, reduced to what a future reader must know
+## A careful first reading, compressed
 
-Paper Espresso reads a research paper completely and creates a compact technical reference designed for rapid consultation and reconstruction of its central reasoning. It preserves the relationships, mathematics, assumptions, evidence, and limitations needed to recover the paper's essential mental model—without reproducing its narrative structure. The default output is one dense, readable LaTeX page delivered as editable source and a verified PDF.
+Paper Espresso reads a research paper completely and creates the smallest faithful learning artifact that can transfer the essential understanding of a careful first reading. It preserves the mathematics, conditions, uncertainty, and difficulty that genuinely matter without reproducing the paper's narrative structure. The default output uses at most one dense, readable LaTeX page delivered as editable source and a compiled, layout-checked PDF.
 
 It does not summarize every section. It asks a harder question:
 
-> If this paper could occupy only one page to inform future readers, what knowledge must survive?
+> What must survive for a technically literate reader to understand this paper without first spending the time to read it in full?
 
 ## The middle layer
 
 | Experience | Primary strength | Result |
 | --- | --- | --- |
 | Original paper | Completeness and the authors' full argument | The technical source of truth |
-| **Paper Espresso** | Irreducible technical understanding | A dense, accessible technical map |
+| **Paper Espresso** | Essential understanding per minute | A compact structured learning artifact |
 | NotebookLM-style overview | Approachable exploration and audio | A conversational introduction |
 
-Important papers should eventually be read in full. Paper Espresso helps before that reading—by exposing the structure that matters—and after it, by preserving the insight in a form that is fast to revisit.
+Paper Espresso surrogates the first careful reading for papers that may or may not justify that investment. Important, consequential, or directly reused papers should still be checked against the original.
 
 ## What the page can contain
 
@@ -28,7 +28,7 @@ Important papers should eventually be read in full. Paper Espresso helps before 
 - Limitations, failure modes, and unresolved questions
 - A related concept only when it improves transfer
 
-The format follows the knowledge. The default is continuous technical prose without predetermined sections. Plain language, direct sentences, and active voice reduce avoidable decoding work when they preserve scientific meaning. Original field terminology stays when it names a real distinction or helps the reader navigate the paper; the digest defines it close to first use instead of silently replacing it.
+The format follows the knowledge while making its structure visible. Three to five compact inline guideposts normally expose the problem and contribution, mechanism or proof spine, evidence and scope, and limits. Their labels and order adapt to the paper rather than mirror its table of contents. Plain language, direct sentences, and active voice reduce avoidable decoding work when they preserve scientific meaning. Original field terminology stays when it names a real distinction or helps the reader navigate the paper; the digest defines it close to first use.
 
 Mathematics stays inline when it remains legible; standalone equations use compact spacing. A few semantic operations may receive light pastel backgrounds that recur behind their named explanations in adjacent prose, without arrows, legends, or color-only references. Narrow visuals or mathematical objects may be wrapped so prose occupies the adjacent space. Captions appear only when their information value exceeds their cost.
 
@@ -44,7 +44,7 @@ Mathematics stays inline when it remains legible; standalone equations use compa
 
 ## Start a pass
 
-With the plugin installed, a paper title, arXiv ID, or URL is the only required input:
+With the plugin installed, a paper title, arXiv ID, arXiv URL, or local PDF is the only required input:
 
 ```text
 $paper-espresso https://arxiv.org/abs/1706.03762

@@ -166,7 +166,7 @@ def analyze_pixels(
     }
 
 
-def layout_failures(
+def layout_warnings(
     pages: list[dict[str, Any]],
     *,
     columns: int = 2,
@@ -175,27 +175,35 @@ def layout_failures(
     min_column_balance: float = DEFAULT_MIN_COLUMN_BALANCE,
     max_column_bottom_blank: float = DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
 ) -> list[str]:
-    failures: list[str] = []
+    warnings: list[str] = []
     for page_number, page in enumerate(pages, start=1):
         if page["used_height_ratio"] < min_used_height:
-            failures.append(
+            warnings.append(
                 f"page {page_number} uses only {page['used_height_ratio']:.1%} of body height"
             )
         blank_ratio = page["largest_blank_band"]["ratio"]
         if blank_ratio > max_blank_band:
-            failures.append(f"page {page_number} has a {blank_ratio:.1%} empty horizontal band")
+            warnings.append(f"page {page_number} has a {blank_ratio:.1%} empty horizontal band")
         if columns > 1 and page["column_balance"] < min_column_balance:
-            failures.append(
+            warnings.append(
                 f"page {page_number} column balance is {page['column_balance']:.1%}"
             )
         for column_number, column in enumerate(page["columns"], start=1):
             bottom_blank = column["bottom_blank_ratio"]
             if bottom_blank > max_column_bottom_blank:
-                failures.append(
+                warnings.append(
                     f"page {page_number} column {column_number} leaves "
                     f"{bottom_blank:.1%} of body height empty at the bottom"
                 )
-    return failures
+    return warnings
+
+
+def layout_failures(
+    pages: list[dict[str, Any]],
+    **kwargs: Any,
+) -> list[str]:
+    """Backward-compatible alias for callers migrating to warning semantics."""
+    return layout_warnings(pages, **kwargs)
 
 
 def analyze_pdf(
@@ -234,7 +242,7 @@ def analyze_pdf(
             raise LayoutError("pdftoppm produced no page rasters")
         metrics = [analyze_pixels(*read_pgm(page), columns=columns) for page in pages]
 
-    failures = layout_failures(
+    warnings = layout_warnings(
         metrics,
         columns=columns,
         min_used_height=min_used_height,
@@ -251,8 +259,7 @@ def analyze_pdf(
             "columns": columns,
         },
         "pages": metrics,
-        "valid": not failures,
-        "failures": failures,
+        "warnings": warnings,
     }
 
 
@@ -289,7 +296,7 @@ def main() -> int:
     except (LayoutError, OSError, subprocess.SubprocessError, ValueError) as exc:
         parser.exit(2, f"error: {exc}\n")
     print(json.dumps(report, indent=2))
-    return 0 if report["valid"] else 2
+    return 0
 
 
 if __name__ == "__main__":

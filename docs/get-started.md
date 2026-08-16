@@ -4,7 +4,7 @@ Paper Espresso is currently an early, Codex-first skills-only plugin. The canoni
 
 ## Start a processing pass
 
-A paper title, arXiv ID, or URL is the only input required to start. Choose exactly one of the following alternative launch lanes. They start the same workflow; do not run both.
+A paper title, arXiv ID, arXiv URL, or local PDF is the only input required to start. Choose exactly one of the following alternative launch lanes. They start the same workflow; do not run both.
 
 ### Installed plugin
 
@@ -22,14 +22,14 @@ Use this lane only while developing from the repository before installing the pl
 Read and follow skills/paper-espresso/SKILL.md for PAPER.
 ```
 
-In either prompt, replace `PAPER` with a paper title, arXiv ID, or URL.
+In either prompt, replace `PAPER` with a paper title, arXiv ID, arXiv URL, or local PDF path.
 
 With no other instructions, Paper Espresso uses these defaults:
 
-- one explicit US Letter page (request A4 or another size when needed);
+- at most one US Letter page (request A4, another size, or an exact count when needed);
 - emphasis inferred from the paper;
 - a technically literate reader outside the paper's immediate subfield;
-- editable `digest.tex` and verified `digest.pdf` output.
+- editable `digest.tex` and a compiled, layout-checked `digest.pdf`.
 
 Everything after `PAPER` is optional and overrides a default. For example:
 
@@ -53,7 +53,7 @@ For local marketplace installation during development, consult the [official Cod
 ## Expected output
 
 - `digest.tex`: editable LaTeX with no dependency on temporary downloads
-- `digest.pdf`: compiled and verified at the exact requested page count
+- `digest.pdf`: compiled and layout-checked within the requested maximum page count
 
 Downloaded source and intermediate files live in a marked temporary workspace and are deleted after completion.
 

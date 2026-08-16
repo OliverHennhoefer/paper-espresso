@@ -4,7 +4,7 @@ Paper Espresso separates model judgment from deterministic infrastructure. The m
 
 ## 1. Resolve the exact paper
 
-The workflow accepts a title, arXiv identifier, or arXiv URL. Ambiguous title matches must be resolved before analysis begins.
+The workflow accepts a title, arXiv identifier, arXiv URL, or local PDF. Ambiguous title matches must be resolved before analysis begins.
 
 ## 2. Prefer original source
 
@@ -36,24 +36,28 @@ Material is classified as essential, supporting, or nice to have. The digest fol
 
 The prose defaults to plain wording, concrete subjects and actions, and active voice where scientifically natural. It keeps the paper's original terminology when a term names a distinct construct, preserves precision, or helps readers navigate the field, and defines that term close to first use. Simplification may reduce decoding effort but may not erase assumptions, qualifications, or technical distinctions.
 
-The digest defaults to dense, continuous technical prose rather than fixed sections. Short bold inline guideposts are used only for genuine conceptual turns. Mathematics remains inline when legible; standalone equations use minimal surrounding space. When a dense equation has a few distinct semantic operations, light pastel backgrounds connect those subexpressions to short named phrases in the immediately adjacent prose. Color is never the only reference, and no arrow/callout infrastructure is added. Narrow figures or compact mathematical objects may be wrapped so prose fills the adjacent area. Captions and numbering are omitted unless they add indispensable meaning.
+The digest normally uses three to five compact visible guideposts to expose the problem and contribution, mechanism or proof spine, evidence and scope, and limits. Labels and order adapt to the paper, and related guideposts may be combined; they do not reproduce the table of contents. Mathematics remains inline when legible; standalone equations use minimal surrounding space. Light pastel backgrounds may connect a few semantic subexpressions to named phrases in adjacent prose. Color is never the only reference. Narrow figures or compact mathematical objects may be wrapped so prose fills the adjacent area. Captions and numbering appear only when indispensable.
 
 ## 6. Compile and inspect
 
-Only the newly authored digest is compiled, with shell escape disabled. Validation checks:
+The generated digest is checked against the trusted preamble before compilation. Only the preflighted document and explicitly permitted assets enter an isolated compile directory; shell escape is disabled and stale outputs are removed. Validation checks:
 
-- exact page count;
+- maximum page count, or exact count only when explicitly requested;
 - unresolved template placeholders;
 - unsafe source constructs;
 - undersized typography;
 - compilation errors and overfull boxes;
-- large unused bands, underfilled column bottoms, and badly imbalanced columns;
+- large unused bands, underfilled column bottoms, and badly imbalanced columns as diagnostics;
 - clipping, collisions, and visual readability on rendered pages.
 
-The raster check measures the actual text body and each column independently. Manual page or column breaks, balancing packages, and stretched vertical glue are rejected as ways to hide missing content. Underfill sends the agent back to the paper for the next-highest-value missing understanding, not filler.
+The raster check measures the actual text body and each column independently. Its findings are warnings, not acceptance criteria. Underfill triggers one check for the next-highest-value missing understanding; if the mental model is complete, whitespace is accepted. Manual breaks, balancing packages, stretched glue, tiny type, and filler remain prohibited.
 
 ## 7. Apply the intellectual approval bar
 
 Before delivery, the digest is reviewed against the complete paper. A technically competent reader should be able to explain the problem, contribution, mechanism, indispensable mathematics or assumptions, strongest evidence, and material limitations. The review also removes unnecessary jargon and indirect phrasing while checking that every retained technical term and difficult distinction remains accurate.
 
 The final deliverables are the requested `.tex` and `.pdf`. Temporary downloads, extracted source, and rendered review pages are removed on success and cleaned up on failure.
+
+## 8. Evaluate the learning product
+
+The repository includes a three-paper benchmark spanning empirical architecture, theorem-heavy analysis, and distributed systems. It tests immediate, source-grounded comprehension with the digest available for consultation. Fidelity is a gate; unsupported load-bearing claims, altered conditions, or changed quantitative results fail the case. The benchmark deliberately excludes delayed recall and never adds test questions to the generated artifact.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a digest's source, page count, log, density, and review renders."""
+"""Validate hard output constraints and report layout diagnostics."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from analyze_layout import (
     LayoutError,
     analyze_pdf,
 )
+from tex_safety import inspect_source
 
 
 class ValidationError(RuntimeError):
@@ -46,7 +47,13 @@ def page_count(pdf: Path) -> int:
 
 
 def inspect_log(log_path: Path | None) -> dict[str, list[str]]:
-    issues = {"errors": [], "warnings": [], "overfull": []}
+    issues = {
+        "errors": [],
+        "unresolved": [],
+        "missing_glyphs": [],
+        "material_overfull": [],
+        "warnings": [],
+    }
     if log_path is None:
         return issues
     if not log_path.is_file():
@@ -55,70 +62,18 @@ def inspect_log(log_path: Path | None) -> dict[str, list[str]]:
     for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
         stripped = line.strip()
         lower = stripped.lower()
-        if "overfull \\hbox" in lower or "overfull \\vbox" in lower:
-            issues["overfull"].append(stripped)
         if stripped.startswith("!") or "fatal error" in lower:
             issues["errors"].append(stripped)
         if "undefined references" in lower or ("citation" in lower and "undefined" in lower):
-            issues["warnings"].append(stripped)
-    return issues
-
-
-def inspect_source(
-    tex_path: Path | None,
-    *,
-    expected_pages: int | None = None,
-) -> dict[str, list[str]]:
-    issues = {"errors": [], "warnings": []}
-    if tex_path is None:
-        return issues
-    if not tex_path.is_file():
-        issues["errors"].append(f"TeX source not found: {tex_path}")
-        return issues
-
-    source = tex_path.read_text(encoding="utf-8", errors="replace")
-    placeholders = sorted(set(re.findall(r"PAPER_ESPRESSO_[A-Z0-9_]+", source)))
-    if placeholders:
-        issues["errors"].append(f"unresolved placeholders: {', '.join(placeholders)}")
-    if re.search(r"(?:/tmp/|/private/(?:tmp|var/folders)/|paper-espresso-[\w.-]+)", source):
-        issues["errors"].append("source contains a temporary-workspace reference")
-    if re.search(r"\\(?:immediate\s*)?write18|\\ShellEscape", source, re.IGNORECASE):
-        issues["errors"].append("source contains a shell-execution primitive")
-    if re.search(r"\\(?:tiny|scriptsize)\b", source):
-        issues["errors"].append("source uses text smaller than the readable-size policy")
-    for match in re.finditer(r"\\fontsize\s*\{\s*([0-9]+(?:\.[0-9]+)?)", source):
-        if float(match.group(1)) < 9.5:
-            issues["errors"].append(
-                f"source requests an explicit {match.group(1)} pt font below the 9.5 pt floor"
-            )
-    if re.search(r"\\resizebox\s*\{", source):
-        issues["warnings"].append("resizebox can make text or equations unreadably small")
-    if not re.search(r"\\usepackage(?:\[[^]]*\])?\{[^}]*microtype[^}]*\}", source):
-        issues["warnings"].append("microtype is not enabled")
-    explicit_page_size = re.search(
-        r"\\documentclass\s*\[[^]]*(?:[ab]\d+paper|letterpaper|legalpaper|executivepaper)",
-        source,
-        re.IGNORECASE,
-    ) or re.search(
-        r"\\usepackage\s*\[[^]]*(?:[ab]\d+paper|letterpaper|legalpaper|executivepaper|paper\s*=|paperwidth\s*=)[^]]*\]\s*\{geometry\}"
-        r"|\\geometry\s*\{[^}]*(?:paper\s*=|paperwidth\s*=)",
-        source,
-        re.IGNORECASE,
-    )
-    if not explicit_page_size:
-        issues["errors"].append("source does not declare an explicit paper size")
-    forced_layout = []
-    if re.search(r"\\(?:columnbreak|balance|flushbottom)\b", source):
-        forced_layout.append("manual column balancing")
-    if re.search(r"\\usepackage(?:\[[^]]*\])?\{[^}]*(?:balance|flushend)[^}]*\}", source):
-        forced_layout.append("a column-balancing package")
-    if expected_pages == 1 and re.search(r"\\(?:newpage|clearpage)\b", source):
-        forced_layout.append("a manual page/column break in a one-page digest")
-    if forced_layout:
-        issues["errors"].append(
-            "source uses layout forcing that can conceal underfill: "
-            + ", ".join(sorted(set(forced_layout)))
-        )
+            issues["unresolved"].append(stripped)
+        if "missing character" in lower or "missing glyph" in lower or "glyph not found" in lower:
+            issues["missing_glyphs"].append(stripped)
+        if "overfull \\hbox" in lower or "overfull \\vbox" in lower:
+            amount = re.search(r"\(([0-9]+(?:\.[0-9]+)?)pt too (?:wide|high)\)", lower)
+            if amount is None or float(amount.group(1)) > 1.0:
+                issues["material_overfull"].append(stripped)
+            else:
+                issues["warnings"].append(stripped)
     return issues
 
 
@@ -146,10 +101,11 @@ def render(pdf: Path, render_dir: Path) -> list[str]:
 
 def validate(
     pdf: Path,
-    expected_pages: int,
+    max_pages: int,
     log: Path | None,
     render_dir: Path | None,
     *,
+    exact_pages: int | None = None,
     tex: Path | None = None,
     density: bool = True,
     columns: int = 2,
@@ -163,10 +119,12 @@ def validate(
         raise ValidationError(f"PDF not found: {pdf_path}")
     actual_pages = page_count(pdf_path)
     log_issues = inspect_log(log.expanduser().resolve() if log else None)
-    source_issues = inspect_source(
-        tex.expanduser().resolve() if tex else None,
-        expected_pages=expected_pages,
-    )
+    source_issues = inspect_source(tex.expanduser().resolve()) if tex else {
+        "errors": [],
+        "warnings": [],
+        "paper_size": None,
+        "assets": [],
+    }
     layout = (
         analyze_pdf(
             pdf_path,
@@ -180,27 +138,36 @@ def validate(
         else None
     )
     renders = render(pdf_path, render_dir) if render_dir else []
+
     failures: list[str] = []
-    if actual_pages != expected_pages:
-        failures.append(f"expected {expected_pages} pages, found {actual_pages}")
+    warnings = list(source_issues["warnings"]) + list(log_issues["warnings"])
+    if actual_pages > max_pages:
+        failures.append(f"maximum is {max_pages} pages, found {actual_pages}")
+    if exact_pages is not None and actual_pages != exact_pages:
+        failures.append(f"expected exactly {exact_pages} pages, found {actual_pages}")
     if log_issues["errors"]:
         failures.append("LaTeX log contains errors")
-    if log_issues["warnings"]:
+    if log_issues["unresolved"]:
         failures.append("LaTeX log contains unresolved references or citations")
-    if log_issues["overfull"]:
-        failures.append("LaTeX log contains overfull boxes")
+    if log_issues["missing_glyphs"]:
+        failures.append("LaTeX log contains missing characters or glyphs")
+    if log_issues["material_overfull"]:
+        failures.append("LaTeX log contains materially overfull boxes")
     if source_issues["errors"]:
         failures.append("TeX source violates the source policy")
-    if layout and not layout["valid"]:
-        failures.extend(layout["failures"])
+    if layout:
+        warnings.extend(layout["warnings"])
+
     report = {
         "pdf": str(pdf_path),
-        "expected_pages": expected_pages,
+        "max_pages": max_pages,
+        "exact_pages": exact_pages,
         "actual_pages": actual_pages,
         "log": log_issues,
         "source": source_issues,
         "layout": layout,
         "renders": renders,
+        "warnings": warnings,
         "valid": not failures,
         "failures": failures,
     }
@@ -212,7 +179,8 @@ def validate(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pdf", type=Path)
-    parser.add_argument("--pages", type=int, required=True)
+    parser.add_argument("--max-pages", type=int, required=True)
+    parser.add_argument("--exact-pages", type=int)
     parser.add_argument("--log", type=Path)
     parser.add_argument("--tex", type=Path)
     parser.add_argument("--render-dir", type=Path)
@@ -227,8 +195,10 @@ def main() -> int:
         default=DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
     )
     args = parser.parse_args()
-    if args.pages < 1:
-        parser.error("--pages must be positive")
+    if args.max_pages < 1:
+        parser.error("--max-pages must be positive")
+    if args.exact_pages is not None and not 1 <= args.exact_pages <= args.max_pages:
+        parser.error("--exact-pages must be positive and no greater than --max-pages")
     for name in (
         "min_used_height",
         "max_blank_band",
@@ -240,9 +210,10 @@ def main() -> int:
     try:
         report = validate(
             args.pdf,
-            args.pages,
+            args.max_pages,
             args.log,
             args.render_dir,
+            exact_pages=args.exact_pages,
             tex=args.tex,
             density=not args.skip_density,
             columns=args.columns,

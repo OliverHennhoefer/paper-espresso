@@ -1,7 +1,7 @@
 [project]
 name = "paper-espresso"
-version = "0.3.0"
-description = "Create compact, technically faithful references for research papers."
+version = "0.4.0"
+description = "Create compact, technically faithful learning artifacts for research papers."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }

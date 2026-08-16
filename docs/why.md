@@ -10,7 +10,7 @@ For seminal or consequential work, there is no honest substitute for eventually 
 
 Conversational research tools such as NotebookLM are valuable because they make source material approachable. Audio and dialogue are excellent ways to establish familiarity and intuition.
 
-Paper Espresso solves a different problem. It is not trying to make the paper conversational. It is trying to preserve the maximum useful technical understanding in a severe page budget.
+Paper Espresso solves a different problem. It is not trying to make the paper conversational or turn it into a quiz. It creates a structured learning artifact that transfers as much of a careful first reading as a severe page budget can faithfully hold.
 
 That means it may retain the ugly details when they matter:
 
@@ -34,9 +34,9 @@ Mathematics can be the most accessible representation when one equation explains
 
 The medium is selected by information value, not by habit.
 
-## The one-page discipline
+## The page-budget discipline
 
-A fixed page budget forces genuine editorial judgment:
+A maximum page budget forces genuine editorial judgment:
 
 1. **Essential:** removing it causes misunderstanding.
 2. **Supporting:** retain only when an essential point depends on it.
@@ -44,4 +44,4 @@ A fixed page budget forces genuine editorial judgment:
 
 Every sentence, equation, label, and visual must pass the deletion test: would its removal materially weaken the reader's mental model? If not, it does not belong.
 
-The result is neither a replacement for the paper nor a beginner's overview. It is a compact technical reference for deciding what deserves deeper attention, preparing to read, rapid consultation, and later reconstruction of the paper's essential mental model.
+The result is neither a universal replacement for the paper nor a beginner's overview. It is a compact learning artifact for understanding papers that may not justify a full initial reading, deciding what deserves deeper attention, and consulting the central model later. It uses concise visible guideposts to reduce search and cognitive load, but does not add recall questions or quizzes.

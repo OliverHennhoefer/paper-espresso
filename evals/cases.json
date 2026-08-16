@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "cases": [
+    {
+      "id": "attention",
+      "title": "Attention Is All You Need",
+      "arxiv_id": "1706.03762",
+      "archetype": "empirical architecture"
+    },
+    {
+      "id": "spectral_pac_bayes",
+      "title": "A PAC-Bayesian Approach to Spectrally-Normalized Margin Bounds for Neural Networks",
+      "arxiv_id": "1707.09564",
+      "archetype": "theorem-heavy analysis"
+    },
+    {
+      "id": "paxos_raft",
+      "title": "Paxos vs Raft: Have we reached consensus on distributed consensus?",
+      "arxiv_id": "2004.05074",
+      "archetype": "distributed systems"
+    }
+  ]
+}

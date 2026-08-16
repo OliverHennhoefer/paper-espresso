@@ -1,4 +1,4 @@
 interface:
   display_name: "Paper Espresso"
-  short_description: "Build compact technical references for papers"
-  default_prompt: "$paper-espresso <paper title, arXiv ID, or URL>"
+  short_description: "Understand one research paper faster"
+  default_prompt: "Use $paper-espresso to create a compact learning artifact for this paper."
