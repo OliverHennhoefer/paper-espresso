@@ -4,6 +4,7 @@ import gzip
 import importlib.util
 import io
 import json
+import os
 import sys
 import tarfile
 import tempfile
@@ -335,6 +336,21 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(len(issues["material_overfull"]), 1)
         self.assertEqual(len(issues["missing_glyphs"]), 1)
 
+    def test_font_size_substitution_invalidates_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pdf = root / "digest.pdf"
+            pdf.write_bytes(b"%PDF")
+            log = root / "digest.log"
+            log.write_text(
+                "LaTeX Font Warning: Font shape `T1/cmr/m/n' in size <9.5> not available\n"
+                "(Font) size <9> substituted on input line 50.\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(validate_output, "page_count", return_value=1):
+                with self.assertRaisesRegex(validate_output.ValidationError, "font size substitutions"):
+                    validate_output.validate(pdf, 1, log, None, density=False)
+
     def test_underfill_does_not_invalidate_output(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -365,12 +381,41 @@ class ValidationTests(unittest.TestCase):
                     validate_output.validate(pdf, 1, None, None, density=False)
 
 
+class LatexIntegrationTests(unittest.TestCase):
+    @unittest.skipUnless(
+        os.environ.get("PAPER_ESPRESSO_LATEX_INTEGRATION") == "1",
+        "set PAPER_ESPRESSO_LATEX_INTEGRATION=1 to run the real pdflatex test",
+    )
+    def test_pdflatex_compiles_content_neutral_digest_with_scalable_fonts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = safe_digest(
+                root / "smoke-digest.tex",
+                r"\pehead{Mechanism} The \petextmark{peblue}{input} maps to "
+                r"$\pemathmark{pegreen}{y=f(x)}$ under the stated assumptions.",
+            )
+            output = root / "output"
+            compiled = compile_tex.compile_tex(source, output, engine="pdflatex")
+            report = validate_output.validate(
+                Path(compiled["pdf"]),
+                1,
+                output / "smoke-digest.log",
+                None,
+                tex=source,
+                density=False,
+            )
+        self.assertEqual(compiled["engine"], "pdflatex")
+        self.assertEqual(report["log"]["font_substitutions"], [])
+        self.assertTrue(report["valid"])
+
+
 class ContractTests(unittest.TestCase):
     def test_template_is_content_neutral_and_structured(self):
         source = (ASSETS / "digest.tex").read_text(encoding="utf-8")
         self.assertIn("PAPER_ESPRESSO_BODY", source)
         self.assertIn("PAPER_ESPRESSO_PAPER_SIZE", source)
         self.assertIn("PAPER_ESPRESSO_TITLE_LINE", source)
+        self.assertIn(r"\usepackage{lmodern}", source)
         self.assertIn(r"\newcommand{\pehead}", source)
         self.assertIn(r"\newcommand{\pemathmark}", source)
         self.assertNotIn(r"\section{", source)
@@ -383,14 +428,6 @@ class ContractTests(unittest.TestCase):
         self.assertIn("Do not add recall questions", skill)
         self.assertNotIn("content-contract.md", skill)
         self.assertLess(len(skill.encode("utf-8")), 10_000)
-
-    def test_canonical_example_passes_source_preflight(self):
-        source = ROOT / "attention-is-all-you-need-espresso.tex"
-        report = tex_safety.inspect_source(source)
-        self.assertEqual(report["errors"], [])
-        self.assertEqual(report["paper_size"], "letterpaper")
-        self.assertGreaterEqual(source.read_text(encoding="utf-8").count(r"\pehead{"), 3)
-        self.assertLessEqual(source.read_text(encoding="utf-8").count(r"\pehead{"), 5)
 
     def test_benchmark_is_small_diverse_and_non_recall(self):
         cases = json.loads((ROOT / "evals" / "cases.json").read_text(encoding="utf-8"))
@@ -410,6 +447,12 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(manifest["version"], "0.4.0")
         self.assertIn("learning artifact", manifest["description"])
         self.assertIn("$paper-espresso", (SKILL / "agents" / "openai.yaml").read_text())
+
+    def test_pdflatex_ci_installs_the_template_scalable_font(self):
+        workflow = (ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
+        self.assertIn("lmodern", workflow)
+        self.assertIn("PAPER_ESPRESSO_LATEX_INTEGRATION", workflow)
+        self.assertNotIn("attention-is-all-you-need", workflow.lower())
 
 
 if __name__ == "__main__":

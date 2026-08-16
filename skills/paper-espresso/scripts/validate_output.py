@@ -51,6 +51,7 @@ def inspect_log(log_path: Path | None) -> dict[str, list[str]]:
         "errors": [],
         "unresolved": [],
         "missing_glyphs": [],
+        "font_substitutions": [],
         "material_overfull": [],
         "warnings": [],
     }
@@ -68,6 +69,8 @@ def inspect_log(log_path: Path | None) -> dict[str, list[str]]:
             issues["unresolved"].append(stripped)
         if "missing character" in lower or "missing glyph" in lower or "glyph not found" in lower:
             issues["missing_glyphs"].append(stripped)
+        if "(font)" in lower and "size <" in lower and "substituted" in lower:
+            issues["font_substitutions"].append(stripped)
         if "overfull \\hbox" in lower or "overfull \\vbox" in lower:
             amount = re.search(r"\(([0-9]+(?:\.[0-9]+)?)pt too (?:wide|high)\)", lower)
             if amount is None or float(amount.group(1)) > 1.0:
@@ -151,6 +154,8 @@ def validate(
         failures.append("LaTeX log contains unresolved references or citations")
     if log_issues["missing_glyphs"]:
         failures.append("LaTeX log contains missing characters or glyphs")
+    if log_issues["font_substitutions"]:
+        failures.append("LaTeX log contains font size substitutions")
     if log_issues["material_overfull"]:
         failures.append("LaTeX log contains materially overfull boxes")
     if source_issues["errors"]:
