@@ -1,45 +1,80 @@
-# Digest content contract
+# Irreducible content contract
 
-Use this contract to decide what survives the page budget.
+Use this contract to decide what deserves space. The digest is not a shorter copy of the paper; it is the smallest faithful representation of the knowledge a future reader should retain.
 
-## Required content
+## Governing question
 
-Include, in descending priority:
+If the paper could occupy only the requested number of pages, what would a technically competent reader need in order to understand, evaluate, and reuse its central idea?
 
-1. Paper identity: exact title, authors, venue/year if known, and stable URL.
-2. Problem: what is being solved and why the prior approach is insufficient.
-3. Contribution: the smallest accurate statement of what is new.
-4. Assumptions and definitions required to understand the contribution.
-5. One or two governing equations with every non-obvious symbol defined.
-6. Method: causal flow from inputs through the mechanism to outputs.
-7. Strongest quantitative or theoretical result, including baseline and metric context.
-8. Limitations, boundary conditions, and known failure cases.
-9. Closely related concepts that help transfer the idea, clearly labeled as context.
+Do not optimize for section coverage. Optimize for the reader's final mental model.
 
-## Evidence rules
+Unless the user chooses another audience, assume a technically literate reader outside the paper's immediate subfield. Define the specialized concepts needed to understand the contribution without spending space on general technical background.
 
-- Trace every equation, number, comparison, and limitation to a source file/section/page while drafting.
+## Complete-paper understanding
+
+- Read the entire acquired paper before drafting, including appendices.
+- Use the abstract, introduction, and conclusion as orientation, not as a substitute for the body.
+- Resolve the relationship between definitions, assumptions, mechanism, evidence, and conclusions.
+- For TeX source, inspect original files when flattened text loses structure or notation.
+- Inspect consequential source figures, diagrams, and plots themselves; captions alone do not reveal all visual evidence, relationships, or failure cases.
+- For PDF fallback, check consequential equations, tables, figures, and multi-column passages against the rendered pages.
+- If a PDF detail remains ambiguous, omit or qualify it rather than guessing.
+
+## Content hierarchy
+
+Select in this order, adapting the form to the paper:
+
+1. Exact paper identity and stable source link.
+2. The problem and the specific deficiency or gap that motivates the work.
+3. The paper's precise contribution and central insight.
+4. The mechanism: how assumptions and inputs lead to the claimed output or result.
+5. Indispensable definitions, assumptions, mathematics, or conceptual structure.
+6. The strongest theoretical or empirical evidence, with the conditions needed to interpret it.
+7. Limitations, boundary conditions, failure modes, or unresolved questions that materially constrain the contribution.
+8. A closely related concept only when it improves transfer or understanding of the central idea; label it as context.
+
+This is a priority order, not a mandatory section template. Omit a category when it does not help explain the paper. Do not force mathematics, annotations, tables, or related concepts into work that does not benefit from them.
+
+## Fidelity rules
+
 - Preserve qualifiers such as “under assumption,” “on dataset,” “in expectation,” and “upper bound.”
 - Do not upgrade correlation to causation, an experiment to a general result, or a conjecture to a theorem.
-- Mark added interpretation with phrases such as “Intuition:” or “Related concept:”.
-- If source and PDF disagree, prefer the latest identified version and disclose the discrepancy.
+- Keep numerical results with the relevant metric, baseline, dataset, and evaluation conditions.
+- Preserve notation unless a simplification is explicitly declared; define every non-obvious symbol that survives.
+- Distinguish added interpretation with labels such as `Intuition:` or `Related concept:`.
+- If source and PDF disagree, prefer the latest identified version and disclose the discrepancy when it affects the digest.
 
-## Page-budget strategy
+## Compression rules
 
-- One page: problem, contribution, one central equation, method, headline result, one limitation, citation.
-- Two pages: add assumptions, a second equation, stronger result detail, and related concepts.
-- Three or more pages: add ablations, proof sketch, implementation detail, or expanded failure analysis.
-- Cut background and prose before shrinking typography.
+- Apply three classes: essential, supporting, and nice to have. Remove nice-to-have material. Keep supporting detail only when an essential point depends on it.
+- Apply the deletion test: if an element can disappear without materially weakening the reader's model, delete it.
+- Prefer one precise statement over multiple approximate statements.
+- Let an equation, compact table, or causal flow replace prose only when it communicates more clearly per unit of space.
+- Avoid generic background, chronology, literature-listing, decorative examples, secondary ablations, and implementation trivia unless they are central to the contribution.
+- Never repeat the same idea in prose, mathematics, and a table.
+- Rewrite for information gain before shortening mechanically.
+
+## Page-budget behavior
+
+- One page: express the irreducible knowledge. Do not mechanically reserve space for fixed sections.
+- Additional pages: add the next-highest-value understanding—deeper assumptions, proof intuition, evidence, ablations, implementation consequences, or failure analysis—not longer prose about material already covered.
+- Cut lower-value content before shrinking typography.
 - Never go below 9.5 pt body text or use line spacing below normal single spacing.
 
-## Equation annotations
+## Mathematics
 
-Annotate terms whose roles are not visually obvious. Use short noun phrases, not sentences. Keep a symbol legend below the equation so the document remains understandable when annotations are unavailable or inaccessible.
+Keep mathematics inline when it remains clear and legible. Give an equation its own unnumbered display only when its structure, width, or role requires one; number it only when the digest must refer to it more than once. Integrate symbol definitions and interpretation into the surrounding prose instead of adding a separate legend when possible.
 
-Do not annotate every token. A useful annotated equation should reveal mechanism, competing terms, constraints, or optimization direction at a glance.
+Treat annotations as expensive. Load `annotate-equations` only when a few short labels expose mechanism, competing terms, constraints, or optimization direction more efficiently than ordinary prose. An unannotated equation is preferable when it is already clear. No equation is preferable when mathematics is not the best carrier of the paper's insight.
+
+## Figures
+
+Use a figure only when its visual structure carries essential mechanism, evidence, geometry, or comparison more efficiently than prose or mathematics. Prefer a compact native LaTeX/TikZ schematic. Wrap prose around a narrow visual when doing so preserves readable line lengths; otherwise use the smallest legible full-column placement.
+
+Do not add a conventional caption by default. State only the indispensable interpretation or provenance in adjacent prose or a compact inline label. Reuse a source figure only when it is indispensable, legible at the target size, and permitted by its license; copy every required asset beside the `.tex` source and identify its provenance. Never include a decorative or merely representative figure.
 
 ## Deliverables
 
-- Editable `.tex` source with no external dependency on the temporary workspace.
+- Editable `.tex` source with no dependency on the temporary workspace, plus any indispensable local figure asset it references.
 - Compiled `.pdf` with the exact requested page count.
-- Optional provenance ledger only when requested; otherwise keep it temporary.
+- No additional artifact unless the digest requires a permitted figure asset or the user explicitly requests one.

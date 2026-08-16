@@ -1,0 +1,30 @@
+[project]
+site_name = "Paper Espresso"
+site_url = "https://oliverhennhoefer.github.io/paper-espresso/"
+site_description = "A research paper, reduced to the irreducible technical knowledge a future reader must retain."
+site_author = "Oliver Hennhöfer"
+copyright = "Copyright &copy; 2026 Oliver Hennhöfer"
+docs_dir = "docs"
+repo_url = "https://github.com/OliverHennhoefer/paper-espresso"
+repo_name = "OliverHennhoefer/paper-espresso"
+edit_uri = "edit/main/docs/"
+nav = [
+  { "Home" = "index.md" },
+  { "Why Paper Espresso" = "why.md" },
+  { "How it works" = "how-it-works.md" },
+  { "Get started" = "get-started.md" }
+]
+
+[project.theme]
+features = [
+  "navigation.instant",
+  "navigation.tracking",
+  "navigation.footer",
+  "navigation.top",
+  "content.action.view",
+  "content.action.edit",
+  "toc.follow"
+]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"

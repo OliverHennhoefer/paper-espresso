@@ -13,6 +13,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "skills" / "paper-espresso" / "scripts"
+ASSETS = ROOT / "skills" / "paper-espresso" / "assets"
 
 
 def load_module(name: str):
@@ -84,6 +85,9 @@ class CorpusTests(unittest.TestCase):
             source.mkdir(parents=True)
             (source / "main.tex").write_text("\\documentclass{article}\n\\begin{document}x\\end{document}", encoding="utf-8")
             (source / "appendix-fragment.tex").write_text("extra evidence", encoding="utf-8")
+            figures = source / "figures"
+            figures.mkdir()
+            (figures / "mechanism.PNG").write_bytes(b"not-a-real-image")
             manifest = {
                 "paper": {"title": "Test", "arxiv_id": "0000.00000"},
                 "acquisition": {"kind": "source", "path": "input/source"},
@@ -92,6 +96,7 @@ class CorpusTests(unittest.TestCase):
             inventory = build_corpus.build(workspace)
             self.assertEqual(inventory["main"], "main.tex")
             self.assertEqual(inventory["unreferenced"], ["appendix-fragment.tex"])
+            self.assertEqual(inventory["figure_files"], ["figures/mechanism.PNG"])
             self.assertTrue((workspace / "analysis" / "corpus.txt").is_file())
             self.assertIn("extra evidence", (workspace / "analysis" / "corpus.txt").read_text(encoding="utf-8"))
 
@@ -122,6 +127,33 @@ class WorkspaceAndValidationTests(unittest.TestCase):
             )
             issues = validate_output.inspect_source(source)
             self.assertEqual(len(issues["errors"]), 3)
+
+
+class TemplateTests(unittest.TestCase):
+    def test_digest_template_is_content_neutral(self):
+        source = (ASSETS / "digest.tex").read_text(encoding="utf-8")
+        self.assertIn("PAPER_ESPRESSO_BODY", source)
+        self.assertIn(r"\newcommand{\pehead}", source)
+        self.assertIn(r"\usepackage{wrapfig}", source)
+        self.assertNotIn(r"\usepackage{annotate-equations}", source)
+        self.assertNotIn(r"\section{", source)
+        fixed_placeholders = (
+            "PAPER_ESPRESSO_PROBLEM",
+            "PAPER_ESPRESSO_CONTRIBUTION",
+            "PAPER_ESPRESSO_METHOD",
+            "PAPER_ESPRESSO_ASSUMPTIONS",
+            "PAPER_ESPRESSO_OBJECTIVE",
+            "PAPER_ESPRESSO_SIGNAL",
+            "PAPER_ESPRESSO_CONSTRAINT",
+            "PAPER_ESPRESSO_SYMBOLS",
+            "PAPER_ESPRESSO_INTUITION",
+            "PAPER_ESPRESSO_RESULTS",
+            "PAPER_ESPRESSO_LIMITATIONS",
+            "PAPER_ESPRESSO_RELATED",
+        )
+        for placeholder in fixed_placeholders:
+            with self.subTest(placeholder=placeholder):
+                self.assertNotIn(placeholder, source)
 
 
 class LayoutTests(unittest.TestCase):

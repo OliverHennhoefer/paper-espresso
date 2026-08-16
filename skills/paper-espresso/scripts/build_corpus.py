@@ -14,6 +14,17 @@ from typing import Any
 INCLUDE_RE = re.compile(r"\\(?:input|include)\s*\{([^}]+)\}")
 COMMENT_RE = re.compile(r"(?<!\\)%.*")
 MAX_CORPUS_BYTES = 30 * 1024 * 1024
+FIGURE_SUFFIXES = {
+    ".eps",
+    ".jpeg",
+    ".jpg",
+    ".pdf",
+    ".png",
+    ".svg",
+    ".tif",
+    ".tiff",
+    ".webp",
+}
 
 
 class CorpusError(RuntimeError):
@@ -130,6 +141,11 @@ def build(work_dir: Path) -> dict[str, Any]:
         for bib in bib_files:
             relative = bib.relative_to(source_root).as_posix()
             corpus += f"\n% ===== BIBLIOGRAPHY: {relative} =====\n{_read_text(bib)}\n"
+        figure_files = sorted(
+            path
+            for path in source_root.rglob("*")
+            if path.is_file() and path.suffix.lower() in FIGURE_SUFFIXES
+        )
         inventory = {
             "kind": "source",
             "main": main.relative_to(source_root).as_posix(),
@@ -137,6 +153,7 @@ def build(work_dir: Path) -> dict[str, Any]:
             "unreferenced": unreferenced,
             "tex_files": [path.relative_to(source_root).as_posix() for path in tex_files],
             "bib_files": [path.relative_to(source_root).as_posix() for path in bib_files],
+            "figure_files": [path.relative_to(source_root).as_posix() for path in figure_files],
         }
     elif acquisition["kind"] == "pdf":
         pdf_path = _safe_child(workspace, workspace / acquisition["path"])

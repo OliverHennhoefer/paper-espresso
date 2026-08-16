@@ -1,22 +1,22 @@
 {
   "name": "paper-espresso",
-  "version": "0.2.0",
-  "description": "Distill an arXiv paper into a dense, mathematical LaTeX digest with source and verified PDF output.",
+  "version": "0.3.0",
+  "description": "Read a research paper completely and turn its essential mental model into a compact LaTeX technical reference with source and verified PDF output.",
   "author": {
     "name": "Paper Espresso contributors"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Paper Espresso",
-    "shortDescription": "Compress papers into rigorous technical digests.",
-    "longDescription": "Resolve a paper from its title or arXiv identifier, acquire source safely with PDF fallback, extract a working corpus, and produce a page-budgeted LaTeX source plus density-checked PDF.",
+    "shortDescription": "Build compact technical references for papers.",
+    "longDescription": "Resolve and read a complete paper from original source or PDF, then create a page-budgeted technical reference for rapid consultation and reconstruction of its central reasoning as LaTeX source plus verified PDF.",
     "developerName": "Paper Espresso contributors",
     "category": "Productivity",
     "capabilities": ["Analysis", "Write"],
     "defaultPrompt": [
-      "Distill this paper into a one-page technical digest.",
-      "Create a two-page mathematical digest of this arXiv paper.",
-      "Explain this paper through its core annotated equation."
+      "Read this paper completely and create a one-page technical reference that preserves its essential mental model.",
+      "Create a two-page mathematical reference for this arXiv paper.",
+      "Create a compact reference for rapidly reconstructing this paper's central reasoning."
     ]
   }
 }
