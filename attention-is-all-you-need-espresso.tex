@@ -1,0 +1,76 @@
+\documentclass[10pt,twocolumn]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.55in,columnsep=0.20in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{booktabs,tabularx}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1.5pt}
+\setlength{\abovedisplayskip}{2pt plus 0.5pt minus 0.5pt}
+\setlength{\belowdisplayskip}{2pt plus 0.5pt minus 0.5pt}
+\setlength{\abovedisplayshortskip}{1pt plus 0.5pt}
+\setlength{\belowdisplayshortskip}{1.5pt plus 0.5pt minus 0.5pt}
+\setlength{\jot}{2pt}
+\setlength{\intextsep}{2pt plus 1pt minus 1pt}
+\setlist{nosep,leftmargin=*,topsep=1pt,partopsep=0pt}
+\newcommand{\pehead}[1]{\textbf{#1.}\hspace{0.30em}}
+\pagestyle{empty}
+\frenchspacing
+\raggedbottom
+\emergencystretch=1em
+
+\begin{document}
+
+{\bfseries Attention Is All You Need}\hfill{\footnotesize 2017 (arXiv v7, 2023)}\par
+{\footnotesize Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, \L ukasz Kaiser, Illia Polosukhin}\par
+\vspace{1pt}\hrule\vspace{2pt}
+
+\pehead{Problem and contribution} Sequence-to-sequence models conventionally propagate state position by position with recurrent networks, making training within each example inherently sequential and placing long-range dependencies behind long computational paths. The paper introduces the \emph{Transformer}, the first encoder--decoder transduction model whose sequence mixing uses only attention: every position can directly select information from every other position, while all positions are processed in parallel during training. The essential decomposition is \emph{attention for cross-position communication} plus the same small feed-forward network independently at each position.
+
+\pehead{The information-routing primitive} Given queries $Q$, keys $K$, and values $V$,
+\[
+ \operatorname{Attn}(Q,K,V)=\operatorname{softmax}\!\left(QK^{\mathsf T}/\sqrt{d_k}\right)V.
+\]
+Each query forms a content-dependent convex mixture of values. If query/key components are independent with unit variance, $\operatorname{Var}(q\!\cdot\!k)=d_k$; division by $\sqrt{d_k}$ keeps logits near unit scale and avoids softmax saturation. One mixture can blur distinct relations, so $h$ learned projections run this operation in parallel:
+\[
+\begin{aligned}
+ \operatorname{MHA}(Q,K,V)&=\operatorname{Concat}_{i=1}^{h}(H_i)W^O,\\
+ H_i&=\operatorname{Attn}(QW_i^Q,KW_i^K,VW_i^V).
+\end{aligned}
+\]
+Heads can select different positions and representation subspaces at roughly the cost of one full-width head because each uses reduced dimensions.
+
+\pehead{Architecture as a causal mechanism} The encoder maps all input tokens through six identical layers, each \(\text{self-attention}\rightarrow\text{position-wise FFN}\). The decoder uses six layers of \(\text{masked self-attention}\rightarrow\text{encoder--decoder attention}\rightarrow\text{FFN}\): a triangular mask sets future-token logits to $-\infty$, preserving autoregressive factorization, while cross-attention queries the encoder output. Every sublayer is wrapped as $\operatorname{LayerNorm}(x+\operatorname{Sublayer}(x))$. The FFN is $\max(0,xW_1+b_1)W_2+b_2$, shared across positions but not layers. With no recurrence or convolution to encode order, sinusoidal position vectors are added to token embeddings; learned position embeddings performed almost identically in the paper's ablation. The base model uses $d_{\rm model}=512$, $d_{\rm ff}=2048$, $h=8$, and $d_k=d_v=64$; input embeddings, output embeddings, and the pre-softmax matrix share weights.
+
+\newpage
+\pehead{Why self-attention was computationally attractive} For sequence length $n$, width $d$, convolution width $k$, and local-attention radius $r$, the paper compares:
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Layer & work/layer & sequential steps & max path \\
+\midrule
+Self-attention & $O(n^2d)$ & $O(1)$ & $O(1)$ \\
+Recurrent & $O(nd^2)$ & $O(n)$ & $O(n)$ \\
+Convolutional & $O(knd^2)$ & $O(1)$ & $O(\log_k n)$ \\
+Local attention & $O(rnd)$ & $O(1)$ & $O(n/r)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Thus dense attention is cheaper than recurrence when $n<d$---typical for the translation setup---and exposes constant-length dependency paths, but its quadratic sequence term is the central scaling weakness.
+
+\pehead{Evidence under the paper's conditions} On WMT 2014 English--German, the base model reaches 27.3 BLEU at an estimated $3.3\!\times\!10^{18}$ training FLOPs; the 213M-parameter ``big'' model reaches 28.4 BLEU, more than 2 BLEU above prior reported systems including ensembles, after 300k steps (3.5 days on eight P100 GPUs). For English--French, the table and abstract report 41.8 BLEU for the big model; the result prose says 41.0, an internal source inconsistency. Base training used 4.5M En--De pairs, Adam with 4000-step warmup then inverse-square-root decay, residual dropout 0.1, and label smoothing 0.1. Controlled En--De development ablations support multiple heads but not ``more is always better'': one head scored 24.9 BLEU, 8/16 heads 25.8, and 32 heads 25.4. A lightly tuned four-layer Transformer also reached 91.3 F1 on WSJ-only constituency parsing and 92.7 semi-supervised, evidence of transfer beyond translation rather than proof of universal superiority.
+
+\pehead{Boundaries and interpretation} Dense attention trades training parallelism and short paths for $O(n^2)$ memory/work; the authors explicitly leave local attention for long inputs to future work. The decoder remains token-by-token at generation time, so recurrence is removed from the network layers, not from autoregressive decoding. Sinusoidal extrapolation beyond trained lengths is a hypothesis, not an established result. Attention plots show heads tracking long dependencies, anaphora, and syntactic-looking relations, but these examples are qualitative and do not establish that attention weights are faithful explanations. Results cover translation and parsing with substantial compute; architecture ablations are development-set experiments, not broad scaling laws.
+
+{\footnotesize\textbf{Source:} \href{https://arxiv.org/abs/1706.03762v7}{Vaswani et al., \emph{Attention Is All You Need}, arXiv:1706.03762v7}.}
+
+\end{document}

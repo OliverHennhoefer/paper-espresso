@@ -32,17 +32,29 @@ Paper Espresso is not a replacement for reading the paper. It is a compact techn
 
 Everything else must earn its place. The skill explicitly rejects section-by-section paraphrase, generic background, decorative equations, repeated conclusions, and layout tricks that conceal weak prioritization.
 
-The digest is primarily continuous technical prose, not a miniature paper with predetermined sections. Short bold inline guideposts may clarify a real conceptual turn. Mathematics stays inline when legible; displays are compact and unnumbered unless their structure requires otherwise. Narrow visuals or mathematical objects may sit inside the prose flow so text uses the adjacent space. Captions and equation annotations are exceptional, not defaults.
+The digest is primarily continuous technical prose, not a miniature paper with predetermined sections. It prefers plain language, direct sentences, and active voice where they preserve scientific meaning. It retains and defines original field terminology when that terminology names a real distinction or helps the reader navigate the paper and its literature. Accessibility reduces avoidable decoding work; it does not trivialize the content.
 
-## Use it
+Short bold inline guideposts may clarify a real conceptual turn. Mathematics stays inline when legible; displays are compact and unnumbered unless their structure requires otherwise. A few equation operations may receive light pastel backgrounds that are picked up directly by named phrases in the adjacent prose—no arrows, legends, or color-only references. Narrow visuals or mathematical objects may sit inside the prose flow so text uses the adjacent space. Captions are exceptional, not defaults.
 
-With the installed Codex plugin:
+## Start a pass
+
+A paper title, arXiv ID, or URL is the only input required to start. Choose one of these alternative launch lanes; do not run both.
+
+Installed plugin (normal use):
 
 ```text
-Use $paper-espresso to read “Attention Is All You Need” completely and create a one-page technical reference that preserves its essential mental model, emphasizing the mathematics.
+$paper-espresso https://arxiv.org/abs/1706.03762
 ```
 
-During local development, open this repository in Codex and ask it to use `skills/paper-espresso/SKILL.md`. The project is distributed as a skills-only plugin and can be installed from a local marketplace source while it is under development; see the [official Codex plugin guidance](https://learn.chatgpt.com/docs/build-plugins).
+Repository checkout (development before installation):
+
+```text
+Read and follow skills/paper-espresso/SKILL.md for https://arxiv.org/abs/1706.03762.
+```
+
+Replace the example URL with any paper title, arXiv ID, or URL. With no other instructions, the skill uses its defaults: one explicit US Letter page, inferred emphasis, a technically literate reader outside the paper's immediate subfield, and editable `.tex` plus verified `.pdf` output. Append instructions only to override those defaults, for example: `— two A4 pages; emphasize the proof strategy.` If a title matches multiple papers, the skill asks for clarification.
+
+The project is distributed as a skills-only plugin and can be installed from a local marketplace source while it is under development; see the [official Codex plugin guidance](https://learn.chatgpt.com/docs/build-plugins).
 
 ## Requirements
 
@@ -78,7 +90,7 @@ pyproject.toml                      project metadata and uv-managed docs extra
 uv.lock                             reproducible dependency lockfile
 skills/paper-espresso/SKILL.md      canonical editorial workflow
 skills/paper-espresso/scripts/      retrieval, extraction, compile, QA, cleanup
-skills/paper-espresso/assets/       compact LaTeX template and annotations
+skills/paper-espresso/assets/       compact LaTeX template with semantic markers
 skills/paper-espresso/references/   content-selection and layout contracts
 docs/                               Zensical documentation source
 zensical.toml                       documentation configuration
@@ -90,4 +102,4 @@ Early first pass. Codex is the authoritative integration. The workflow and quali
 
 ## License
 
-MIT. The vendored `annotate-equations` package retains its own MIT license notice.
+MIT.

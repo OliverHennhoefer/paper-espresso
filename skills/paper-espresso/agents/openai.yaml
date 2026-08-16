@@ -1,4 +1,4 @@
 interface:
   display_name: "Paper Espresso"
   short_description: "Build compact technical references for papers"
-  default_prompt: "Use $paper-espresso to read this paper completely and create a one-page technical reference that preserves its essential mental model."
+  default_prompt: "$paper-espresso <paper title, arXiv ID, or URL>"

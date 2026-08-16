@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -31,11 +30,6 @@ def compile_tex(source: Path, output_dir: Path, engine: str = "auto") -> dict[st
     destination = output_dir.expanduser().resolve()
     destination.mkdir(parents=True, exist_ok=True)
     executable = select_engine(engine)
-    assets_dir = Path(__file__).resolve().parent.parent / "assets"
-    environment = os.environ.copy()
-    environment["TEXINPUTS"] = os.pathsep.join(
-        [str(tex_path.parent), str(assets_dir), environment.get("TEXINPUTS", "")]
-    )
     is_tectonic = Path(executable).name == "tectonic"
     command = (
         [
@@ -73,7 +67,6 @@ def compile_tex(source: Path, output_dir: Path, engine: str = "auto") -> dict[st
             stderr=subprocess.STDOUT,
             text=True,
             timeout=180,
-            env=environment,
         )
         last_output = result.stdout
         if result.returncode != 0:

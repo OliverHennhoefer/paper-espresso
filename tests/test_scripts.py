@@ -120,7 +120,8 @@ class WorkspaceAndValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "digest.tex"
             source.write_text(
-                r"\usepackage{microtype,annotate-equations}"
+                "\\documentclass[letterpaper]{article}\n"
+                r"\usepackage{microtype}"
                 "\nPAPER_ESPRESSO_TITLE /tmp/input.tex "
                 r"\tiny hidden",
                 encoding="utf-8",
@@ -128,14 +129,49 @@ class WorkspaceAndValidationTests(unittest.TestCase):
             issues = validate_output.inspect_source(source)
             self.assertEqual(len(issues["errors"]), 3)
 
+    def test_source_inspection_rejects_layout_forcing_for_one_page(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "digest.tex"
+            source.write_text(
+                "\\documentclass[letterpaper]{article}\n"
+                "\\usepackage{microtype,balance}\n"
+                "\\begin{document}\n"
+                "\\newpage\n"
+                "\\flushbottom\n"
+                "\\end{document}\n",
+                encoding="utf-8",
+            )
+            issues = validate_output.inspect_source(source, expected_pages=1)
+            self.assertEqual(len(issues["errors"]), 1)
+            self.assertIn("layout forcing", issues["errors"][0])
+
+    def test_source_inspection_requires_explicit_page_size(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "digest.tex"
+            source.write_text(
+                "\\documentclass{article}\n"
+                "\\usepackage{microtype}\n",
+                encoding="utf-8",
+            )
+            issues = validate_output.inspect_source(source)
+            self.assertIn("explicit paper size", issues["errors"][0])
+
 
 class TemplateTests(unittest.TestCase):
     def test_digest_template_is_content_neutral(self):
         source = (ASSETS / "digest.tex").read_text(encoding="utf-8")
         self.assertIn("PAPER_ESPRESSO_BODY", source)
+        self.assertIn("PAPER_ESPRESSO_PAPER_SIZE", source)
+        self.assertIn("PAPER_ESPRESSO_IDENTITY", source)
         self.assertIn(r"\newcommand{\pehead}", source)
+        self.assertIn(r"\newcommand{\pemathmark}", source)
+        self.assertIn(r"\newcommand{\petextmark}", source)
         self.assertIn(r"\usepackage{wrapfig}", source)
         self.assertNotIn(r"\usepackage{annotate-equations}", source)
+        self.assertNotIn("PAPER_ESPRESSO_AUTHORS", source)
+        self.assertNotIn("PAPER_ESPRESSO_CITATION", source)
+        self.assertNotIn(r"\textbf{Source:}", source)
+        self.assertNotIn(r"\hrule", source)
         self.assertNotIn(r"\section{", source)
         fixed_placeholders = (
             "PAPER_ESPRESSO_PROBLEM",
@@ -158,11 +194,10 @@ class TemplateTests(unittest.TestCase):
 
 class LayoutTests(unittest.TestCase):
     @staticmethod
-    def raster(*, balanced: bool) -> tuple[int, int, bytes]:
+    def raster(*, balanced: bool, final_y: int = 286) -> tuple[int, int, bytes]:
         width, height = 200, 300
         pixels = bytearray([255]) * (width * height)
         column_ranges = [(15, 92), (108, 185)] if balanced else [(15, 92)]
-        final_y = 270 if balanced else 135
         for y in range(20, final_y, 11):
             for row in range(y, min(y + 3, height)):
                 for left, right in column_ranges:
@@ -178,15 +213,45 @@ class LayoutTests(unittest.TestCase):
         self.assertGreaterEqual(
             metrics["column_balance"], analyze_layout.DEFAULT_MIN_COLUMN_BALANCE
         )
+        self.assertTrue(
+            all(
+                column["bottom_blank_ratio"]
+                <= analyze_layout.DEFAULT_MAX_COLUMN_BOTTOM_BLANK
+                for column in metrics["columns"]
+            )
+        )
 
     def test_sparse_one_sided_raster_is_detected(self):
-        metrics = analyze_layout.analyze_pixels(*self.raster(balanced=False), columns=2)
-        self.assertLess(metrics["used_height_ratio"], analyze_layout.DEFAULT_MIN_USED_HEIGHT)
+        metrics = analyze_layout.analyze_pixels(
+            *self.raster(balanced=False, final_y=135),
+            columns=2,
+        )
         self.assertLess(metrics["column_balance"], analyze_layout.DEFAULT_MIN_COLUMN_BALANCE)
+        self.assertEqual(metrics["columns"][1]["bottom_blank_ratio"], 1.0)
+
+    def test_equally_underfilled_columns_are_detected(self):
+        metrics = analyze_layout.analyze_pixels(
+            *self.raster(balanced=True, final_y=220),
+            columns=2,
+        )
+        self.assertGreaterEqual(
+            metrics["column_balance"],
+            analyze_layout.DEFAULT_MIN_COLUMN_BALANCE,
+        )
+        self.assertTrue(
+            all(
+                column["bottom_blank_ratio"]
+                > analyze_layout.DEFAULT_MAX_COLUMN_BOTTOM_BLANK
+                for column in metrics["columns"]
+            )
+        )
+        failures = analyze_layout.layout_failures([metrics], columns=2)
+        self.assertTrue(any("column 1 leaves" in failure for failure in failures))
+        self.assertTrue(any("column 2 leaves" in failure for failure in failures))
 
 
 class CompileTests(unittest.TestCase):
-    def test_tectonic_is_untrusted_and_uses_vendored_assets(self):
+    def test_tectonic_is_untrusted(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "digest.tex"
@@ -196,7 +261,6 @@ class CompileTests(unittest.TestCase):
             def fake_run(command, **kwargs):
                 self.assertIn("--untrusted", command)
                 self.assertIn("--keep-logs", command)
-                self.assertIn("paper-espresso/assets", kwargs["env"]["TEXINPUTS"])
                 output.mkdir(exist_ok=True)
                 (output / "digest.pdf").write_bytes(b"%PDF-1.5")
                 return SimpleNamespace(returncode=0, stdout="ok")

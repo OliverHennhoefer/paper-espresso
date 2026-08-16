@@ -24,7 +24,7 @@ Unless the user chooses another audience, assume a technically literate reader o
 
 Select in this order, adapting the form to the paper:
 
-1. Exact paper identity and stable source link.
+1. Exact paper identity and stable source link, kept in the compact title line rather than a separate citation block.
 2. The problem and the specific deficiency or gap that motivates the work.
 3. The paper's precise contribution and central insight.
 4. The mechanism: how assumptions and inputs lead to the claimed output or result.
@@ -33,7 +33,7 @@ Select in this order, adapting the form to the paper:
 7. Limitations, boundary conditions, failure modes, or unresolved questions that materially constrain the contribution.
 8. A closely related concept only when it improves transfer or understanding of the central idea; label it as context.
 
-This is a priority order, not a mandatory section template. Omit a category when it does not help explain the paper. Do not force mathematics, annotations, tables, or related concepts into work that does not benefit from them.
+This is a priority order, not a mandatory section template. Omit a category when it does not help explain the paper. Do not force mathematics, highlights, tables, or related concepts into work that does not benefit from them.
 
 ## Fidelity rules
 
@@ -44,11 +44,26 @@ This is a priority order, not a mandatory section template. Omit a category when
 - Distinguish added interpretation with labels such as `Intuition:` or `Related concept:`.
 - If source and PDF disagree, prefer the latest identified version and disclose the discrepancy when it affects the digest.
 
+## Readability without flattening
+
+Reduce the work required to decode the paper, not the precision or difficulty inherent in its ideas.
+
+- Prefer ordinary, concrete wording when specialist language adds no precision.
+- Retain the authors' or field's term when it names a distinct construct, is needed to navigate the source or related literature, or would lose meaning under paraphrase. Give a compact plain-language explanation at first use, then use the term consistently.
+- Prefer active voice when the actor, mechanism, or causal step matters: state what performs the operation and what changes. Keep passive voice when the actor is unknown or irrelevant, or when the result or procedure is legitimately the scientific focus.
+- Put the main subject and action early. Replace avoidable nominalizations and stacked nouns with verbs and explicit relationships.
+- Keep one principal claim or causal relation per sentence when combining them would increase tracking effort. Keep decisive qualifiers next to the claim they limit.
+- Define notation, abbreviations, and specialist terms close to first use. Do not vary technical vocabulary merely for stylistic variety.
+- Use intuition and analogy to expose structure, never as substitutes for the mechanism, assumptions, or evidence.
+
+Do not make the digest sound elementary by deleting the paper's terminology, edge cases, mathematical structure, or uncertainty. Accessibility means that necessary complexity is well explained.
+
 ## Compression rules
 
 - Apply three classes: essential, supporting, and nice to have. Remove nice-to-have material. Keep supporting detail only when an essential point depends on it.
 - Apply the deletion test: if an element can disappear without materially weakening the reader's model, delete it.
 - Prefer one precise statement over multiple approximate statements.
+- Prefer a direct subject–verb statement over an abstract or passive construction when both are equally faithful.
 - Let an equation, compact table, or causal flow replace prose only when it communicates more clearly per unit of space.
 - Avoid generic background, chronology, literature-listing, decorative examples, secondary ablations, and implementation trivia unless they are central to the contribution.
 - Never repeat the same idea in prose, mathematics, and a table.
@@ -63,9 +78,9 @@ This is a priority order, not a mandatory section template. Omit a category when
 
 ## Mathematics
 
-Keep mathematics inline when it remains clear and legible. Give an equation its own unnumbered display only when its structure, width, or role requires one; number it only when the digest must refer to it more than once. Integrate symbol definitions and interpretation into the surrounding prose instead of adding a separate legend when possible.
+Keep mathematics inline when it remains clear and legible. Give an equation its own unnumbered display only when its structure, width, or role requires one; number it only when the digest must refer to it more than once. Integrate symbol definitions and interpretation into the surrounding prose instead of adding a separate legend when possible. Before presenting an essential equation, state what its inputs, outputs, and non-obvious symbols mean. Preserve assumptions needed for a derivation or interpretation, and name the axis, domain, or normalization when ambiguity would change the reader's model.
 
-Treat annotations as expensive. Load `annotate-equations` only when a few short labels expose mechanism, competing terms, constraints, or optimization direction more efficiently than ordinary prose. An unannotated equation is preferable when it is already clear. No equation is preferable when mathematics is not the best carrier of the paper's insight.
+Use semantic highlighting only when it reduces decoding effort. Mark two to four meaningful subexpressions with the template's light pastel backgrounds, then reuse the same background on the corresponding short, named phrase in immediately adjacent prose. Keep glyphs black and never make color the only reference. Avoid arrows, callouts, legends, nested boxes, and labels that create extra vertical infrastructure. If direct markers still leave the equation cognitively dense, decompose or rewrite it; if it still does not carry the insight efficiently, remove it.
 
 ## Figures
 

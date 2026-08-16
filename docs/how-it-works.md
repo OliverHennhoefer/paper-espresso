@@ -34,7 +34,9 @@ The agent does not begin after reading only the abstract, introduction, and conc
 
 Material is classified as essential, supporting, or nice to have. The digest follows the paper's intellectual structure rather than its table of contents.
 
-The digest defaults to dense, continuous technical prose rather than fixed sections. Short bold inline guideposts are used only for genuine conceptual turns. Mathematics remains inline when legible; standalone equations use minimal surrounding space. Narrow figures or compact mathematical objects may be wrapped so prose fills the adjacent area. Captions, numbering, and equation annotations are omitted unless they add indispensable meaning.
+The prose defaults to plain wording, concrete subjects and actions, and active voice where scientifically natural. It keeps the paper's original terminology when a term names a distinct construct, preserves precision, or helps readers navigate the field, and defines that term close to first use. Simplification may reduce decoding effort but may not erase assumptions, qualifications, or technical distinctions.
+
+The digest defaults to dense, continuous technical prose rather than fixed sections. Short bold inline guideposts are used only for genuine conceptual turns. Mathematics remains inline when legible; standalone equations use minimal surrounding space. When a dense equation has a few distinct semantic operations, light pastel backgrounds connect those subexpressions to short named phrases in the immediately adjacent prose. Color is never the only reference, and no arrow/callout infrastructure is added. Narrow figures or compact mathematical objects may be wrapped so prose fills the adjacent area. Captions and numbering are omitted unless they add indispensable meaning.
 
 ## 6. Compile and inspect
 
@@ -45,11 +47,13 @@ Only the newly authored digest is compiled, with shell escape disabled. Validati
 - unsafe source constructs;
 - undersized typography;
 - compilation errors and overfull boxes;
-- large unused bands and badly imbalanced columns;
+- large unused bands, underfilled column bottoms, and badly imbalanced columns;
 - clipping, collisions, and visual readability on rendered pages.
+
+The raster check measures the actual text body and each column independently. Manual page or column breaks, balancing packages, and stretched vertical glue are rejected as ways to hide missing content. Underfill sends the agent back to the paper for the next-highest-value missing understanding, not filler.
 
 ## 7. Apply the intellectual approval bar
 
-Before delivery, the digest is reviewed against the complete paper. A technically competent reader should be able to explain the problem, contribution, mechanism, indispensable mathematics or assumptions, strongest evidence, and material limitations.
+Before delivery, the digest is reviewed against the complete paper. A technically competent reader should be able to explain the problem, contribution, mechanism, indispensable mathematics or assumptions, strongest evidence, and material limitations. The review also removes unnecessary jargon and indirect phrasing while checking that every retained technical term and difficult distinction remains accurate.
 
 The final deliverables are the requested `.tex` and `.pdf`. Temporary downloads, extracted source, and rendered review pages are removed on success and cleaned up on failure.

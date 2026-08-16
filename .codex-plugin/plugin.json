@@ -14,9 +14,8 @@
     "category": "Productivity",
     "capabilities": ["Analysis", "Write"],
     "defaultPrompt": [
-      "Read this paper completely and create a one-page technical reference that preserves its essential mental model.",
-      "Create a two-page mathematical reference for this arXiv paper.",
-      "Create a compact reference for rapidly reconstructing this paper's central reasoning."
+      "$paper-espresso <paper title, arXiv ID, or URL>",
+      "$paper-espresso <paper title, arXiv ID, or URL> — two A4 pages; emphasize the proof strategy."
     ]
   }
 }

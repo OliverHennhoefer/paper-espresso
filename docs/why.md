@@ -24,9 +24,13 @@ That means it may retain the ugly details when they matter:
 
 Accessibility here means that the structure of the idea is exposed clearly. It does not mean removing every difficult concept.
 
-Unless the user specifies otherwise, the intended reader is technically literate but outside the paper's immediate subfield. Indispensable specialist concepts are explained; general technical background is not repeated.
+Unless the user specifies otherwise, the intended reader is technically literate but outside the paper's immediate subfield. The prose therefore prefers ordinary words, direct subject–verb sentences, and active voice where they preserve meaning. It avoids jargon that merely makes the writing sound academic.
 
-Mathematics can be the most accessible representation when one equation explains a mechanism better than several paragraphs. It remains inline when possible and receives display space only when its structure needs it. An annotation is worthwhile only when it reveals more than the space and visual overhead it consumes. Plain prose remains the default carrier of the insight.
+Some terminology is part of the knowledge. A named method, theorem condition, field-specific distinction, or term needed to navigate the source should remain. Paper Espresso defines it close to first use and then uses it consistently. It does not replace precise language with a friendlier near-synonym that changes the claim.
+
+Indispensable specialist concepts are explained; general technical background is not repeated. The goal is to remove avoidable cognitive load while preserving necessary complexity, qualifications, and uncertainty.
+
+Mathematics can be the most accessible representation when one equation explains a mechanism better than several paragraphs. It remains inline when possible and receives display space only when its structure needs it. When a few subexpressions need direct explanation, light semantic markers can connect them to named phrases in the surrounding prose without adding arrows, legends, or color-only references. Plain prose remains the default carrier of the insight.
 
 The medium is selected by information value, not by habit.
 

@@ -2,6 +2,43 @@
 
 Paper Espresso is currently an early, Codex-first skills-only plugin. The canonical workflow is [`skills/paper-espresso/SKILL.md`](https://github.com/OliverHennhoefer/paper-espresso/blob/main/skills/paper-espresso/SKILL.md).
 
+## Start a processing pass
+
+A paper title, arXiv ID, or URL is the only input required to start. Choose exactly one of the following alternative launch lanes. They start the same workflow; do not run both.
+
+### Installed plugin
+
+Use this lane for normal operation:
+
+```text
+$paper-espresso PAPER
+```
+
+### Repository checkout
+
+Use this lane only while developing from the repository before installing the plugin:
+
+```text
+Read and follow skills/paper-espresso/SKILL.md for PAPER.
+```
+
+In either prompt, replace `PAPER` with a paper title, arXiv ID, or URL.
+
+With no other instructions, Paper Espresso uses these defaults:
+
+- one explicit US Letter page (request A4 or another size when needed);
+- emphasis inferred from the paper;
+- a technically literate reader outside the paper's immediate subfield;
+- editable `digest.tex` and verified `digest.pdf` output.
+
+Everything after `PAPER` is optional and overrides a default. For example:
+
+```text
+$paper-espresso PAPER — two A4 pages; emphasize the proof strategy.
+```
+
+If a title matches multiple papers, Paper Espresso asks for clarification before continuing.
+
 ## Requirements
 
 - Python 3.10+
@@ -11,33 +48,7 @@ Paper Espresso is currently an early, Codex-first skills-only plugin. The canoni
 
 The runtime itself uses Python's standard library.
 
-## Run from an installed plugin
-
-Install the checkout from a local marketplace source during development, then start a new Codex conversation and invoke the skill:
-
-```text
-Use $paper-espresso to read “<paper title>” completely and create a one-page technical reference that preserves its essential mental model.
-```
-
-Useful variations:
-
-```text
-Create a two-page technical reference and emphasize the proof strategy.
-```
-
-```text
-Use one page. Keep the governing equation and the strongest empirical result.
-```
-
-```text
-Make the digest accessible to a technically literate reader outside the paper's immediate subfield without removing essential mathematics.
-```
-
-While the plugin is under development, consult the [official Codex plugin guidance](https://learn.chatgpt.com/docs/build-plugins) for local marketplace installation.
-
-## Run directly from the checkout
-
-Open the repository in Codex and ask it to read and follow `skills/paper-espresso/SKILL.md` for the requested paper. This is useful while iterating before marketplace installation.
+For local marketplace installation during development, consult the [official Codex plugin guidance](https://learn.chatgpt.com/docs/build-plugins).
 
 ## Expected output
 

@@ -28,21 +28,26 @@ Important papers should eventually be read in full. Paper Espresso helps before 
 - Limitations, failure modes, and unresolved questions
 - A related concept only when it improves transfer
 
-The format follows the knowledge. The default is continuous technical prose without predetermined sections. Mathematics stays inline when it remains legible; standalone equations use compact spacing, and narrow visuals or mathematical objects may be wrapped so prose occupies the adjacent space. Captions and equation annotations appear only when their information value exceeds their cost.
+The format follows the knowledge. The default is continuous technical prose without predetermined sections. Plain language, direct sentences, and active voice reduce avoidable decoding work when they preserve scientific meaning. Original field terminology stays when it names a real distinction or helps the reader navigate the paper; the digest defines it close to first use instead of silently replacing it.
+
+Mathematics stays inline when it remains legible; standalone equations use compact spacing. A few semantic operations may receive light pastel backgrounds that recur behind their named explanations in adjacent prose, without arrows, legends, or color-only references. Narrow visuals or mathematical objects may be wrapped so prose occupies the adjacent space. Captions appear only when their information value exceeds their cost.
 
 ## What it refuses
 
 - Abstract rewriting and section-by-section paraphrase
 - Generic background that does not improve understanding
-- Decorative equations or annotations
+- Decorative equations or highlights
+- Avoidable jargon, unexplained abbreviations, and needlessly indirect prose
 - Results detached from metrics, assumptions, datasets, or baselines
 - Tiny typography used to avoid making editorial decisions
 - Confident reconstruction of uncertain PDF extraction
 
-## First prompt
+## Start a pass
+
+With the plugin installed, a paper title, arXiv ID, or URL is the only required input:
 
 ```text
-Use $paper-espresso to read “Attention Is All You Need” completely and create a one-page technical reference that preserves its essential mental model, emphasizing the mathematics.
+$paper-espresso https://arxiv.org/abs/1706.03762
 ```
 
-Continue with [why Paper Espresso exists](why.md), [how the workflow operates](how-it-works.md), or [get started](get-started.md).
+This single prompt starts the complete workflow. See [get started](get-started.md) for the alternative repository-checkout lane and optional overrides, or continue with [why Paper Espresso exists](why.md) and [how the workflow operates](how-it-works.md).

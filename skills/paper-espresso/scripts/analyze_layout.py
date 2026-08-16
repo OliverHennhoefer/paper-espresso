@@ -12,9 +12,12 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-DEFAULT_MIN_USED_HEIGHT = 0.82
-DEFAULT_MAX_BLANK_BAND = 0.16
+DEFAULT_MIN_USED_HEIGHT = 0.95
+DEFAULT_MAX_BLANK_BAND = 0.08
 DEFAULT_MIN_COLUMN_BALANCE = 0.80
+DEFAULT_MAX_COLUMN_BOTTOM_BLANK = 0.05
+BODY_TOP_RATIO = 0.05
+BODY_BOTTOM_RATIO = 0.95
 INK_THRESHOLD = 245
 
 
@@ -90,7 +93,7 @@ def analyze_pixels(
         raise LayoutError("only one- and two-column layouts are supported")
 
     x0, x1 = int(width * 0.06), int(width * 0.94)
-    y0, y1 = int(height * 0.06), int(height * 0.90)
+    y0, y1 = int(height * BODY_TOP_RATIO), int(height * BODY_BOTTOM_RATIO)
     body_width = x1 - x0
     body_height = y1 - y0
 
@@ -106,9 +109,8 @@ def analyze_pixels(
     row_counts = [ink_count(x0, x1, y, y + 1) for y in range(y0, y1)]
     active_rows = [count >= row_threshold for count in row_counts]
     active_indexes = [index for index, active in enumerate(active_rows) if active]
-    first_active = active_indexes[0] if active_indexes else 0
     last_active = active_indexes[-1] if active_indexes else -1
-    used_height = (last_active - first_active + 1) / body_height if active_indexes else 0.0
+    used_height = (last_active + 1) / body_height if active_indexes else 0.0
     blank_start, blank_length = _largest_false_run(active_rows)
 
     if columns == 1:
@@ -118,16 +120,24 @@ def analyze_pixels(
         half_gutter = max(2, int(width * 0.012))
         column_ranges = [(x0, midpoint - half_gutter), (midpoint + half_gutter, x1)]
 
-    column_metrics: list[dict[str, float | int]] = []
+    column_metrics: list[dict[str, Any]] = []
     for left, right in column_ranges:
         threshold = max(1, int((right - left) * 0.002))
         counts = [ink_count(left, right, y, y + 1) for y in range(y0, y1)]
-        active_count = sum(count >= threshold for count in counts)
+        active_indexes = [index for index, count in enumerate(counts) if count >= threshold]
+        active_count = len(active_indexes)
+        last_active = active_indexes[-1] if active_indexes else -1
+        used_extent = (last_active + 1) / body_height if active_indexes else 0.0
+        bottom_blank = 1.0 - used_extent
         column_metrics.append(
             {
                 "ink_pixels": sum(counts),
                 "active_rows": active_count,
                 "active_row_ratio": round(active_count / body_height, 4),
+                "last_active_y": y0 + last_active if active_indexes else None,
+                "used_extent_ratio": round(used_extent, 4),
+                "bottom_blank_height": body_height - last_active - 1,
+                "bottom_blank_ratio": round(bottom_blank, 4),
             }
         )
 
@@ -156,6 +166,38 @@ def analyze_pixels(
     }
 
 
+def layout_failures(
+    pages: list[dict[str, Any]],
+    *,
+    columns: int = 2,
+    min_used_height: float = DEFAULT_MIN_USED_HEIGHT,
+    max_blank_band: float = DEFAULT_MAX_BLANK_BAND,
+    min_column_balance: float = DEFAULT_MIN_COLUMN_BALANCE,
+    max_column_bottom_blank: float = DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
+) -> list[str]:
+    failures: list[str] = []
+    for page_number, page in enumerate(pages, start=1):
+        if page["used_height_ratio"] < min_used_height:
+            failures.append(
+                f"page {page_number} uses only {page['used_height_ratio']:.1%} of body height"
+            )
+        blank_ratio = page["largest_blank_band"]["ratio"]
+        if blank_ratio > max_blank_band:
+            failures.append(f"page {page_number} has a {blank_ratio:.1%} empty horizontal band")
+        if columns > 1 and page["column_balance"] < min_column_balance:
+            failures.append(
+                f"page {page_number} column balance is {page['column_balance']:.1%}"
+            )
+        for column_number, column in enumerate(page["columns"], start=1):
+            bottom_blank = column["bottom_blank_ratio"]
+            if bottom_blank > max_column_bottom_blank:
+                failures.append(
+                    f"page {page_number} column {column_number} leaves "
+                    f"{bottom_blank:.1%} of body height empty at the bottom"
+                )
+    return failures
+
+
 def analyze_pdf(
     pdf: Path,
     *,
@@ -163,6 +205,7 @@ def analyze_pdf(
     min_used_height: float = DEFAULT_MIN_USED_HEIGHT,
     max_blank_band: float = DEFAULT_MAX_BLANK_BAND,
     min_column_balance: float = DEFAULT_MIN_COLUMN_BALANCE,
+    max_column_bottom_blank: float = DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
 ) -> dict[str, Any]:
     pdf_path = pdf.expanduser().resolve()
     if not pdf_path.is_file():
@@ -191,24 +234,20 @@ def analyze_pdf(
             raise LayoutError("pdftoppm produced no page rasters")
         metrics = [analyze_pixels(*read_pgm(page), columns=columns) for page in pages]
 
-    failures: list[str] = []
-    for page_number, page in enumerate(metrics, start=1):
-        if page["used_height_ratio"] < min_used_height:
-            failures.append(
-                f"page {page_number} uses only {page['used_height_ratio']:.1%} of body height"
-            )
-        blank_ratio = page["largest_blank_band"]["ratio"]
-        if blank_ratio > max_blank_band:
-            failures.append(f"page {page_number} has a {blank_ratio:.1%} empty horizontal band")
-        if columns > 1 and page["column_balance"] < min_column_balance:
-            failures.append(
-                f"page {page_number} column balance is {page['column_balance']:.1%}"
-            )
+    failures = layout_failures(
+        metrics,
+        columns=columns,
+        min_used_height=min_used_height,
+        max_blank_band=max_blank_band,
+        min_column_balance=min_column_balance,
+        max_column_bottom_blank=max_column_bottom_blank,
+    )
     return {
         "thresholds": {
             "min_used_height": min_used_height,
             "max_blank_band": max_blank_band,
             "min_column_balance": min_column_balance,
+            "max_column_bottom_blank": max_column_bottom_blank,
             "columns": columns,
         },
         "pages": metrics,
@@ -224,7 +263,20 @@ def main() -> int:
     parser.add_argument("--min-used-height", type=float, default=DEFAULT_MIN_USED_HEIGHT)
     parser.add_argument("--max-blank-band", type=float, default=DEFAULT_MAX_BLANK_BAND)
     parser.add_argument("--min-column-balance", type=float, default=DEFAULT_MIN_COLUMN_BALANCE)
+    parser.add_argument(
+        "--max-column-bottom-blank",
+        type=float,
+        default=DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
+    )
     args = parser.parse_args()
+    for name in (
+        "min_used_height",
+        "max_blank_band",
+        "min_column_balance",
+        "max_column_bottom_blank",
+    ):
+        if not 0 <= getattr(args, name) <= 1:
+            parser.error(f"--{name.replace('_', '-')} must be between 0 and 1")
     try:
         report = analyze_pdf(
             args.pdf,
@@ -232,6 +284,7 @@ def main() -> int:
             min_used_height=args.min_used_height,
             max_blank_band=args.max_blank_band,
             min_column_balance=args.min_column_balance,
+            max_column_bottom_blank=args.max_column_bottom_blank,
         )
     except (LayoutError, OSError, subprocess.SubprocessError, ValueError) as exc:
         parser.exit(2, f"error: {exc}\n")

@@ -1,4 +1,4 @@
-\documentclass[10pt,twocolumn]{article}
+\documentclass[10pt,PAPER_ESPRESSO_PAPER_SIZE,twocolumn]{article}
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -21,9 +21,25 @@
 \setlength{\jot}{2pt}
 \setlength{\intextsep}{2pt plus 1pt minus 1pt}
 \setlist{nosep,leftmargin=*,topsep=1pt,partopsep=0pt}
+\definecolor{peblue}{HTML}{E6F0FA}
+\definecolor{peamber}{HTML}{FFF2CC}
+\definecolor{peviolet}{HTML}{EDE5F6}
+\definecolor{pegreen}{HTML}{E2F2E6}
 \newcommand{\pehead}[1]{\textbf{#1.}\hspace{0.30em}}
-\newcommand{\paperclaim}[1]{\textbf{Paper claim:} #1}
-\newcommand{\addedcontext}[1]{\textit{Intuition:} #1}
+\newcommand{\pemathmark}[2]{%
+  \begingroup\setlength{\fboxsep}{0.55pt}%
+  \mathchoice
+    {\colorbox{#1}{$\displaystyle\color{black}\mathstrut #2$}}%
+    {\colorbox{#1}{$\textstyle\color{black}\mathstrut #2$}}%
+    {\colorbox{#1}{$\scriptstyle\color{black}\mathstrut #2$}}%
+    {\colorbox{#1}{$\scriptscriptstyle\color{black}\mathstrut #2$}}%
+  \endgroup
+}
+\newcommand{\petextmark}[2]{%
+  \begingroup\setlength{\fboxsep}{0.55pt}%
+  \colorbox{#1}{\textcolor{black}{\strut #2}}%
+  \endgroup
+}
 \pagestyle{empty}
 \frenchspacing
 \raggedbottom
@@ -31,12 +47,10 @@
 
 \begin{document}
 
-{\bfseries PAPER_ESPRESSO_TITLE}\hfill{\footnotesize PAPER_ESPRESSO_YEAR}\par
-{\footnotesize PAPER_ESPRESSO_AUTHORS}\par
-\vspace{1pt}\hrule\vspace{2pt}
+{\href{PAPER_ESPRESSO_URL}{\bfseries PAPER_ESPRESSO_TITLE}%
+\hfill{\footnotesize PAPER_ESPRESSO_IDENTITY}\par}
+\vspace{1pt}
 
 PAPER_ESPRESSO_BODY
-
-{\footnotesize\textbf{Source:} \href{PAPER_ESPRESSO_URL}{PAPER_ESPRESSO_CITATION}.}
 
 \end{document}

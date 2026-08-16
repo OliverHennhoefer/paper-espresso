@@ -11,11 +11,11 @@ Ask: **If this paper could occupy only the requested number of pages to inform f
 
 Create a compact technical reference for rapid consultation and reconstruction of the paper's central reasoning. Preserve the relationships, mathematics, assumptions, evidence, and limitations needed to recover its essential mental model without reproducing its narrative structure.
 
-Read the complete paper, understand it, and express that irreducible knowledge with no wasted sentence, equation, figure, heading, or word. Preserve the paper's insight rather than its section structure. Default to one page and LaTeX unless the user requests otherwise.
+Read the complete paper, understand it, and express that irreducible knowledge with no wasted sentence, equation, figure, heading, or word. Maximize readability and minimize avoidable cognitive load without flattening technical distinctions, uncertainty, or difficulty that belongs to the paper. Preserve the paper's insight rather than its section structure. Default to one page and LaTeX unless the user requests otherwise.
 
 ## Workflow
 
-1. Establish the paper title, arXiv ID, or URL; page budget (default `1`); requested emphasis; reader profile; and output directory. Infer omitted emphasis from the paper itself. Unless specified otherwise, write for a technically literate reader outside the paper's immediate subfield: explain indispensable field-specific concepts, but not general technical background.
+1. Treat the paper title, arXiv ID, or URL as the only required user input. Establish the page budget (default `1`), paper size (default `letterpaper`), requested emphasis, reader profile, and output directory. Infer omitted emphasis from the paper itself. Unless specified otherwise, write for a technically literate reader outside the paper's immediate subfield: explain indispensable field-specific concepts, but not general technical background. If the user does not name an output directory, choose a clearly named directory in the current workspace and report it. Ask for clarification only when the paper identity is ambiguous or another material choice cannot be inferred safely.
 2. Read [references/content-contract.md](references/content-contract.md) and [references/layout-policy.md](references/layout-policy.md) before drafting.
 3. Create a marked temporary workspace:
 
@@ -49,12 +49,16 @@ Read the complete paper, understand it, and express that irreducible knowledge w
    - **Nice to have:** remove.
 
    Apply the deletion test to every element: if removing it does not materially weaken the reader's model of the paper, remove it.
-8. Copy `assets/digest.tex` to the output directory and replace every `PAPER_ESPRESSO_*` placeholder. Write primarily as dense, continuous technical prose; do not impose conventional sections or mirror the paper's headings. When a change of subject genuinely needs a guidepost, use a short bold inline lead such as `\pehead{Mechanism}` that runs directly into the paragraph.
+8. Copy `assets/digest.tex` to the output directory and replace every `PAPER_ESPRESSO_*` placeholder. Set `PAPER_ESPRESSO_PAPER_SIZE` explicitly to `letterpaper` unless the user requests another size. Keep paper identity to the linked title plus one compact same-line identifier such as `Vaswani et al., 2017; arXiv:1706.03762`; do not add a separate author block, rule, or source footer. Write primarily as dense, continuous technical prose; do not impose conventional sections or mirror the paper's headings. When a change of subject genuinely needs a guidepost, use a short bold inline lead such as `\pehead{Mechanism}` that runs directly into the paragraph.
+   - Prefer plain, concrete language when specialist wording adds no precision or useful connection to the paper. Retain the authors' or field's exact term when it names a distinct construct, helps the reader navigate the source or literature, or would be distorted by paraphrase; define it compactly at first use.
+   - Prefer active voice when the actor, mechanism, or causal step is known and relevant. Use passive voice when the actor is unknown or immaterial, or when forcing active voice would weaken scientific accuracy. Put concrete subjects and actions early, keep definitions near use, and avoid long noun chains or sentences carrying several independent claims.
    - Keep mathematics inline when it remains legible. Use a compact unnumbered display only when the expression needs its own visual structure; do not reserve vertical space for a formula merely because it is important.
+   - Before an essential equation, define what every surviving symbol means in the mechanism. Explain the operation in reading order, including normalization axes, assumptions, constraints, or domains when they affect meaning.
+   - When a dense equation contains a few semantic operations that prose must refer to, use the template's light-background `\pemathmark{<color>}{...}` and `\petextmark{<color>}{...}` helpers. Reuse the same marker on the corresponding short phrase in the immediately adjacent prose. Keep mathematics and text black, use two to four pastel markers, and make the named phrase—not color alone—carry the reference. Do not highlight decoration or every symbol.
    - Let prose wrap around a narrow figure, diagram, or compact mathematical object with `wrapfigure` when the remaining line width stays readable. Use `wrapfigure` directly; do not hide it inside another environment because that can break paragraph shaping. Do not wrap a wide equation into cramped text.
    - Omit standalone captions and labels by default. Put the indispensable interpretation, qualifier, or provenance into the adjacent sentence; add a caption only when the object cannot be understood faithfully without one.
-   - Keep `annotate-equations` unloaded by default. Add it only when a few short labels expose essential mechanism more efficiently than the text and extra space they consume.
-   - Do not force a heading, equation, annotation, table, or figure into a paper that does not benefit from it.
+   - Do not use arrow-and-callout equation annotation infrastructure. If direct semantic markers and adjacent prose cannot make the expression accessible, simplify, decompose, or remove it.
+   - Do not force a heading, equation, highlight, table, or figure into a paper that does not benefit from it.
 9. Compile only the newly authored digest with shell escape disabled:
 
    ```bash
@@ -70,11 +74,14 @@ Read the complete paper, understand it, and express that irreducible knowledge w
       --render-dir "<espresso_tmp>/rendered"
     ```
 
-    Inspect every rendered page. Revise until text is readable, annotations do not collide, no material is clipped or overflowing, and no conspicuously empty region remains. Cut lower-value content before tightening typography.
+    Inspect every rendered page. Let text flow naturally between columns: do not use `\newpage`, `\columnbreak`, balancing packages, or stretched vertical glue to conceal underfill. If validation reports unused column bottoms, return to the source paper and spend the capacity on the highest-value missing mechanism, assumption, evidence, limitation, or symbol explanation. Recompile and remeasure until text is readable, markers do not collide, no material is clipped or overflowing, and no conspicuously empty region remains. This is layout convergence, not permission to add filler. Cut lower-value content before tightening typography.
 11. Perform a skeptical intellectual review against the paper:
     - Does the digest convey the insight, not merely topics mentioned by the paper?
     - Are equations, numbers, qualifiers, assumptions, and conclusions faithful?
     - Is any essential dependency missing?
+    - Is every specialist term necessary, useful for transfer, or defined where it appears?
+    - Can any sentence become more direct or active without losing precision?
+    - Does the prose minimize decoding effort without trivializing the paper?
     - Is any sentence, label, or visual redundant?
     - Would a technically competent reader leave with the right mental model?
 
@@ -96,26 +103,32 @@ Read the complete paper, understand it, and express that irreducible knowledge w
 5. **Preserve scientific meaning.** Do not detach results from conditions, silently alter notation, omit decisive assumptions, or upgrade correlation, experiments, conjectures, or bounds into stronger claims.
 6. **Treat uncertain PDF extraction as uncertainty.** Verify against the page; omit rather than invent.
 7. **Distinguish paper claims from added explanation.** Mark external intuition and related concepts clearly.
-8. **Use mathematics as compressed knowledge.** Include a formula only when it carries essential mechanism, structure, or result; prefer legible inline math, define every non-obvious symbol, and make display space earn its cost.
-9. **Use normal typography.** Default to 10 pt, restrained margins, and a minimal title block. Never solve selection problems with tiny type, negative spacing, or indiscriminate compression.
-10. **Use the page fully without filler.** Empty space may indicate missing essential knowledge; generic background is not a remedy.
-11. **Keep acquisition untrusted.** Never compile, run, or trust downloaded source. Compile only the authored digest.
+8. **Use mathematics as compressed knowledge.** Include a formula only when it carries essential mechanism, structure, or result; prefer legible inline math, define every non-obvious symbol, and make display space earn its cost. Use direct semantic markers only when they reduce the reader's decoding work.
+9. **Write for understanding.** Prefer plain language, active constructions, local definitions, and direct causal order when they preserve meaning. Keep indispensable field terminology and complexity; explain rather than erase them.
+10. **Use normal typography.** Default to 10 pt, explicit `letterpaper`, restrained margins, and a single-line identity block. Never solve selection problems with tiny type, negative spacing, or indiscriminate compression.
+11. **Use the page fully without filler.** Empty space may indicate missing essential knowledge; generic background is not a remedy.
+12. **Keep acquisition untrusted.** Never compile, run, or trust downloaded source. Compile only the authored digest.
 
 ## Reject aggressively
 
 - Section-by-section paraphrase, abstract rewriting, and generic introductory background.
 - Facts that are true but unnecessary for understanding this paper's contribution.
 - Equations included for appearance rather than explanatory value.
-- Conventional section scaffolding, excessive headings, decorative annotations or figures, unnecessary captions or equation numbers, repeated conclusions, and prose that merely restates a table or formula.
+- Conventional section scaffolding, excessive headings, decorative highlights or figures, unnecessary captions or equation numbers, repeated conclusions, and prose that merely restates a table or formula.
 - Numerical results without their metric, baseline, dataset, assumptions, or evaluation conditions when those affect interpretation.
 - Technical detail that displaces the central mechanism or insight.
+- Avoidable jargon, unexplained abbreviations, academic-sounding nominalizations, and passive constructions that hide who or what acts.
+- Simplification that removes a decisive condition, distinction, mechanism, or field term the reader needs.
 - Confident reconstruction of garbled PDF text, notation, tables, or formulas.
 - Layout tricks that conceal weak prioritization.
+- Manual page or column breaks, column-balancing packages, or stretched vertical glue used to make underfilled content look complete.
 
 ## Preferred remedies
 
 - Replace several descriptive sentences with one precise equation, table, or causal flow when it genuinely communicates more.
 - Combine a definition with its role instead of explaining it twice.
+- Replace an unnecessary specialist or abstract phrase with a shorter ordinary verb or noun. When the original term matters, give the plain explanation and term together once, then use the term consistently.
+- Rewrite obscured actions as concrete subject–verb statements and split sentences that force the reader to track several independent claims.
 - Remove examples, history, and secondary ablations before weakening the core explanation.
 - Rewrite for information gain rather than merely shortening sentences.
 - If the page is underfilled, return to the paper and look for missing assumptions, mechanism, evidence, or limitations—not filler.
@@ -138,6 +151,7 @@ Also require:
 - normal readable typography;
 - no unsupported or ambiguously extracted claims;
 - no unexplained essential notation;
+- no avoidable jargon or obscured agency, and no simplification that changes the paper's meaning;
 - no wasted sentence, duplicated idea, decorative overhead, clipping, collision, or conspicuous unused region;
 - editable `.tex`, verified `.pdf`, and confirmed temporary-workspace removal.
 
@@ -146,8 +160,7 @@ Also require:
 - `scripts/arxiv.py`: resolve titles and safely acquire source/PDF.
 - `scripts/build_corpus.py`: flatten TeX or extract PDF text without executing source.
 - `scripts/compile_tex.py`: compile generated LaTeX with shell escape disabled.
-- `scripts/analyze_layout.py`: measure empty bands, used height, and column balance from a PDF raster.
+- `scripts/analyze_layout.py`: measure empty bands, body reach, per-column bottom gaps, and column balance from a PDF raster.
 - `scripts/validate_output.py`: verify source policy, pages, logs, density, and optional page renders.
 - `scripts/temp_workspace.py`: create and securely remove marked temporary workspaces.
-- `assets/digest.tex`: content-neutral LaTeX starting point with an open body, compact display spacing, inline-guidepost helper, and direct `wrapfig` support.
-- `assets/annotate-equations.sty`: vendored MIT-licensed annotation package available as an exceptional opt-in through the compile helper's asset path.
+- `assets/digest.tex`: content-neutral LaTeX starting point with an open body, compact display spacing, inline-guidepost and semantic-marker helpers, and direct `wrapfig` support.

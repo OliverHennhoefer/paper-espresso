@@ -1,4 +1,4 @@
-\documentclass[10pt,twocolumn]{article}
+\documentclass[10pt,letterpaper,twocolumn]{article}
 \usepackage[T1]{fontenc}
 \usepackage[margin=0.55in,columnsep=0.20in]{geometry}
 \usepackage{amsmath,amssymb,mathtools}
@@ -7,9 +7,23 @@
 \usepackage{enumitem}
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
-\usepackage{annotate-equations}
-\newcommand{\peMark}[3][NavyBlue]{\eqnmarkbox[#1]{#2}{#3}}
-\newcommand{\peAnnotate}[4][]{\annotate[#1]{#2}{#3}{#4}}
+\definecolor{peblue}{HTML}{E6F0FA}
+\definecolor{peamber}{HTML}{FFF2CC}
+\definecolor{pegreen}{HTML}{E2F2E6}
+\newcommand{\pemathmark}[2]{%
+  \begingroup\setlength{\fboxsep}{0.55pt}%
+  \mathchoice
+    {\colorbox{#1}{$\displaystyle\color{black}\mathstrut #2$}}%
+    {\colorbox{#1}{$\textstyle\color{black}\mathstrut #2$}}%
+    {\colorbox{#1}{$\scriptstyle\color{black}\mathstrut #2$}}%
+    {\colorbox{#1}{$\scriptscriptstyle\color{black}\mathstrut #2$}}%
+  \endgroup
+}
+\newcommand{\petextmark}[2]{%
+  \begingroup\setlength{\fboxsep}{0.55pt}%
+  \colorbox{#1}{\textcolor{black}{\strut #2}}%
+  \endgroup
+}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1.5pt}
 \setlength{\abovedisplayskip}{4pt plus 1pt minus 1pt}
@@ -24,31 +38,29 @@
 \raggedbottom
 \emergencystretch=1em
 \begin{document}
-{\bfseries Sample Paper Espresso Digest}\hfill{\footnotesize 2026}\par
-{\footnotesize A. Researcher and B. Scientist}\par
-\vspace{1pt}\hrule\vspace{2pt}
+{\href{https://example.invalid/paper}{\bfseries Sample Paper Espresso Digest}%
+\hfill{\footnotesize Researcher et al., 2026}\par}
+\vspace{1pt}
 
 \section{Problem}
 Supervised predictors can interpolate a training set while behaving unpredictably on unseen inputs. The central problem is to select parameters that fit observed examples without using unnecessary capacity. The setting assumes independent pairs $(x_i,y_i)$, a differentiable predictor $f_\theta$, and a loss $\ell$ whose scale is comparable across experiments.
 
 \section{Core contribution}
-\textbf{Paper claim:} a single regularized objective exposes the tradeoff between empirical fit and parameter complexity, while validation chooses the tradeoff strength. This fixture does not attribute the construction to a real paper; it exercises the digest's information hierarchy, typography, equation callouts, evidence table, and density checks.
+\textbf{Paper claim:} a single regularized objective exposes the tradeoff between empirical fit and parameter complexity, while validation chooses the tradeoff strength. This fixture does not attribute the construction to a real paper; it exercises the digest's information hierarchy, typography, semantic equation markers, evidence table, and density checks.
 
 \section{Mechanism}
 Optimization updates $\theta$ from minibatch gradients. The first term estimates prediction error; the second shrinks weakly supported directions. Larger $\lambda$ increases bias but can reduce variance. Features must be normalized, because an isotropic parameter penalty is otherwise not invariant to feature units.
 
 \textbf{Assumptions.} Samples are representative; train and evaluation losses use the same target semantics; optimization reaches comparable stationary points; and model selection does not inspect the held-out test set.
 
-\vspace{1.1em}
 \begin{equation*}
-\peMark[NavyBlue]{objective}{\mathcal{L}(\theta)}=
-\peMark[OliveGreen]{signal}{\frac{1}{n}\sum_{i=1}^{n}\ell(f_\theta(x_i),y_i)}+
-\peMark[WildStrawberry]{constraint}{\lambda\lVert\theta\rVert_2^2}.
+\pemathmark{peblue}{\mathcal{L}(\theta)}=
+\pemathmark{pegreen}{\frac{1}{n}\sum_{i=1}^{n}\ell(f_\theta(x_i),y_i)}+
+\pemathmark{peamber}{\lambda\lVert\theta\rVert_2^2}.
 \end{equation*}
-\peAnnotate[yshift=1.2em]{above}{objective}{objective}
-\peAnnotate[yshift=-1.1em]{below}{signal}{data fit}
-\peAnnotate[yshift=1.2em]{above}{constraint}{regularizer}
-\par\vspace{2.4em}
+The \petextmark{pegreen}{data-fit term} rewards agreement with observations; the
+\petextmark{peamber}{regularizer} charges for large parameters, and their sum is
+the \petextmark{peblue}{training objective}.
 
 \textbf{Symbols.} $n$ is sample count; $\theta$ contains trainable parameters; $\ell$ is per-example loss; and $\lambda\geq0$ controls shrinkage. The gradient is the sum of the data gradient and $2\lambda\theta$, so the regularizer continuously pulls parameters toward zero.
 
@@ -91,5 +103,4 @@ The digest should also connect claims to evidence. A method claim needs the defi
 \section{Takeaway}
 Regularization is useful only relative to a specified data regime, selection protocol, and evaluation measure. The compact objective is the organizing idea; assumptions, quantitative comparisons, and failure modes determine whether the resulting conclusion transfers beyond the reported experiment.
 
-{\footnotesize\textbf{Source:} Local compile and layout-density fixture.}
 \end{document}

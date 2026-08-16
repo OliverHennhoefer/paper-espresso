@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from analyze_layout import (
+    DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
     DEFAULT_MAX_BLANK_BAND,
     DEFAULT_MIN_COLUMN_BALANCE,
     DEFAULT_MIN_USED_HEIGHT,
@@ -63,7 +64,11 @@ def inspect_log(log_path: Path | None) -> dict[str, list[str]]:
     return issues
 
 
-def inspect_source(tex_path: Path | None) -> dict[str, list[str]]:
+def inspect_source(
+    tex_path: Path | None,
+    *,
+    expected_pages: int | None = None,
+) -> dict[str, list[str]]:
     issues = {"errors": [], "warnings": []}
     if tex_path is None:
         return issues
@@ -90,8 +95,30 @@ def inspect_source(tex_path: Path | None) -> dict[str, list[str]]:
         issues["warnings"].append("resizebox can make text or equations unreadably small")
     if not re.search(r"\\usepackage(?:\[[^]]*\])?\{[^}]*microtype[^}]*\}", source):
         issues["warnings"].append("microtype is not enabled")
-    if "annotate-equations" not in source:
-        issues["warnings"].append("annotate-equations is not enabled")
+    explicit_page_size = re.search(
+        r"\\documentclass\s*\[[^]]*(?:[ab]\d+paper|letterpaper|legalpaper|executivepaper)",
+        source,
+        re.IGNORECASE,
+    ) or re.search(
+        r"\\usepackage\s*\[[^]]*(?:[ab]\d+paper|letterpaper|legalpaper|executivepaper|paper\s*=|paperwidth\s*=)[^]]*\]\s*\{geometry\}"
+        r"|\\geometry\s*\{[^}]*(?:paper\s*=|paperwidth\s*=)",
+        source,
+        re.IGNORECASE,
+    )
+    if not explicit_page_size:
+        issues["errors"].append("source does not declare an explicit paper size")
+    forced_layout = []
+    if re.search(r"\\(?:columnbreak|balance|flushbottom)\b", source):
+        forced_layout.append("manual column balancing")
+    if re.search(r"\\usepackage(?:\[[^]]*\])?\{[^}]*(?:balance|flushend)[^}]*\}", source):
+        forced_layout.append("a column-balancing package")
+    if expected_pages == 1 and re.search(r"\\(?:newpage|clearpage)\b", source):
+        forced_layout.append("a manual page/column break in a one-page digest")
+    if forced_layout:
+        issues["errors"].append(
+            "source uses layout forcing that can conceal underfill: "
+            + ", ".join(sorted(set(forced_layout)))
+        )
     return issues
 
 
@@ -129,13 +156,17 @@ def validate(
     min_used_height: float = DEFAULT_MIN_USED_HEIGHT,
     max_blank_band: float = DEFAULT_MAX_BLANK_BAND,
     min_column_balance: float = DEFAULT_MIN_COLUMN_BALANCE,
+    max_column_bottom_blank: float = DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
 ) -> dict[str, Any]:
     pdf_path = pdf.expanduser().resolve()
     if not pdf_path.is_file():
         raise ValidationError(f"PDF not found: {pdf_path}")
     actual_pages = page_count(pdf_path)
     log_issues = inspect_log(log.expanduser().resolve() if log else None)
-    source_issues = inspect_source(tex.expanduser().resolve() if tex else None)
+    source_issues = inspect_source(
+        tex.expanduser().resolve() if tex else None,
+        expected_pages=expected_pages,
+    )
     layout = (
         analyze_pdf(
             pdf_path,
@@ -143,6 +174,7 @@ def validate(
             min_used_height=min_used_height,
             max_blank_band=max_blank_band,
             min_column_balance=min_column_balance,
+            max_column_bottom_blank=max_column_bottom_blank,
         )
         if density
         else None
@@ -189,10 +221,20 @@ def main() -> int:
     parser.add_argument("--min-used-height", type=float, default=DEFAULT_MIN_USED_HEIGHT)
     parser.add_argument("--max-blank-band", type=float, default=DEFAULT_MAX_BLANK_BAND)
     parser.add_argument("--min-column-balance", type=float, default=DEFAULT_MIN_COLUMN_BALANCE)
+    parser.add_argument(
+        "--max-column-bottom-blank",
+        type=float,
+        default=DEFAULT_MAX_COLUMN_BOTTOM_BLANK,
+    )
     args = parser.parse_args()
     if args.pages < 1:
         parser.error("--pages must be positive")
-    for name in ("min_used_height", "max_blank_band", "min_column_balance"):
+    for name in (
+        "min_used_height",
+        "max_blank_band",
+        "min_column_balance",
+        "max_column_bottom_blank",
+    ):
         if not 0 <= getattr(args, name) <= 1:
             parser.error(f"--{name.replace('_', '-')} must be between 0 and 1")
     try:
@@ -207,6 +249,7 @@ def main() -> int:
             min_used_height=args.min_used_height,
             max_blank_band=args.max_blank_band,
             min_column_balance=args.min_column_balance,
+            max_column_bottom_blank=args.max_column_bottom_blank,
         )
     except (LayoutError, ValidationError, OSError, subprocess.SubprocessError) as exc:
         parser.exit(2, f"error: {exc}\n")
